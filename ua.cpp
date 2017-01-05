@@ -3,8 +3,9 @@
 #include <unordered_map>
 #include <cstdlib>
 
-#include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
+#include <boost/regex.hpp>
 #include <string>
 #include <cstring>
 
@@ -147,15 +148,17 @@ void parseProduct(Section& s, string product) {
 
 
 Section parseSection(string ua, int& index) {
-    auto buffer = readUtil(ua, index, ' ', false);
+    string buffer = readUtil(ua, index, ' ', false);
 
     Section s;
     parseProduct(s, buffer);
 
-    if (index < ua.size() && ua[index] == '(') {
+    if (index < (int)ua.size() && ua[index] == '(') {
         index++;
-        buffer = readUtil(ua, index, ' ', true);
-        split(s.comment, buffer, is_any_of("; "));
+        buffer = readUtil(ua, index, ')', true);
+        //split(s.comment, buffer, is_any_of("; "));
+
+        split_regex(s.comment, buffer, boost::regex("; ")) ;
         index++;
     }
 
@@ -231,6 +234,17 @@ bool Mobile(UserAgent& p) {
 
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    const string ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0b8) Gecko/20100101 Firefox/4.0b8";
+
+    UserAgent p;
+    Parse(p, ua);
+
+    cout << "raw: " << ua << endl;
+
+    cout << "browser Name: " << p.browser.Name << endl;
+    cout << "browser Version: " << p.browser.Version << endl;
+    cout << "browser Engine: " << p.browser.Engine << endl;
+    cout << "browser EngineVersion: " << p.browser.EngineVersion << endl;
+
     return 0;
 }

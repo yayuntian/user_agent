@@ -6,12 +6,12 @@ endif
 OBJS = ua.o
 
 %.o: %.cpp
-	    $(CC) $(CXXFLAGS) -c $<
+	    $(CXX) $(CXXFLAGS) -c $<
 
 all: mafia
 
 mafia: $(OBJS)
-	    $(CC) -lrt -o $@ $(OBJS) $(LIBS)
+	    $(CXX) -o $@ $(OBJS) $(LIBS)
 
 clean:
 	    rm -f *.o mafia
