@@ -2,6 +2,7 @@
 #include <vector>
 #include <unordered_map>
 #include <cstdlib>
+#include <sys/time.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
@@ -232,19 +233,34 @@ bool Mobile(UserAgent& p) {
 }
 
 
-
-int main() {
+int main(int argc, char **argv) {
     const string ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0b8) Gecko/20100101 Firefox/4.0b8";
+    if (argc < 2) {
+        printf("Usage: %s  <loop-count>\n", argv[0]);
+        exit(0);
+    }
 
-    UserAgent p;
-    Parse(p, ua);
+    int i;
+    int loop = atoi(argv[1]);
 
-    cout << "raw: " << ua << endl;
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+    for (i = 0; i < loop; i++) {
+        UserAgent p;
+        Parse(p, ua);
+        cout << "raw: " << ua << endl;
+        cout << "browser Name: " << p.browser.Name << endl;
+        cout << "browser Version: " << p.browser.Version << endl;
+        cout << "browser Engine: " << p.browser.Engine << endl;
+        cout << "browser EngineVersion: " << p.browser.EngineVersion << endl;
 
-    cout << "browser Name: " << p.browser.Name << endl;
-    cout << "browser Version: " << p.browser.Version << endl;
-    cout << "browser Engine: " << p.browser.Engine << endl;
-    cout << "browser EngineVersion: " << p.browser.EngineVersion << endl;
+    }
+    gettimeofday(&end, NULL);
+
+    uint64_t time_cost = ((end.tv_sec - start.tv_sec) * 1000000 + \
+            end.tv_usec - start.tv_usec);
+
+    printf("cost time: %ld us, %.2f pps\n", time_cost, loop / (time_cost * 1.0) * 1000000);
 
     return 0;
 }
