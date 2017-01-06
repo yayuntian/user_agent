@@ -10,113 +10,13 @@
 #include <string>
 #include <cstring>
 
-using namespace std;
-using namespace boost::algorithm;
-
-#include "ua.h"
+#include "userAgent.h"
 #include "lrucache.h"
 
 using namespace std;
-
-
-boost::regex ie11Regexp{"^rv:(.+)$"};
+using namespace boost::algorithm;
 
 cache::lru_cache<string, UserAgent> cacheUA(1000);
-
-
-void detectBrowser(UserAgent& p, vector<Section>& sections) {
-
-    int slen = sections.size();
-    if (sections[0].name == "Opera") {
-        p.browser.Name = "Opera";
-        p.browser.Version = sections[0].version;
-        p.browser.Engine = "Presto";
-        if (slen > 1) {
-            p.browser.EngineVersion = sections[1].version;
-        }
-    } else if (sections[0].name == "Dalvik") {
-        p.mozilla = "5.0";
-    } else if (slen > 1) {
-        Section engine = sections[1];
-        p.browser.Engine = engine.name;
-        p.browser.EngineVersion = engine.version;
-        if (slen > 2) {
-            int sectionIndex = 2;
-            if (sections[2].version == "" && slen > 3) {
-                sectionIndex = 3;
-            }
-            p.browser.Version = sections[sectionIndex].version;
-            if (engine.name == "AppleWebKit") {
-                string name = sections[slen - 1].name;
-                if (name == "Edge") {
-                    p.browser.Name = "Edge";
-                    p.browser.Version = sections[slen - 1].version;
-                    p.browser.Engine = "EdgeHTML";
-                    p.browser.EngineVersion = "";
-                } else if (name == "OPR") {
-                    p.browser.Name = "Opera";
-                    p.browser.Version = sections[slen - 1].version;
-                } else {
-                    if (sections[sectionIndex].name == "Chrome") {
-                        p.browser.Name = "Chrome";
-                    } else if (sections[sectionIndex].name == "Chromium") {
-                        p.browser.Name = "Chromium";
-                    } else {
-                        p.browser.Name = "Safari";
-                    }
-                }
-            } else if (engine.name == "Gecko") {
-                string name = sections[2].name;
-                if (name == "MRA" && slen > 4) {
-                    name = sections[4].name;
-                    p.browser.Version = sections[4].version;
-                }
-                p.browser.Name = name;
-            } else if (engine.name == "like" && sections[2].name == "Gecko") {
-                p.browser.Engine = "Trident";
-                p.browser.Name = "Internet Explorer";
-                for (auto s : sections[0].comment) {
-                    boost::smatch what;
-                    if (boost::regex_search(s, what, ie11Regexp)) {
-                        p.browser.Version = what[0];
-                        return;
-                    }
-                }
-                p.browser.Version = "";
-            }
-        }
-    } else if (slen == 1 && sections[0].comment.size() > 1) {
-        vector<string> comment = sections[0].comment;
-        if (comment[0] == "compatible" && starts_with(comment[1], "MSIE")) {
-            p.browser.Name = "Internet Explorer";
-            p.browser.Engine = "Trident";
-
-            size_t len = comment.size();
-            for (size_t i = 0; i < len; i++) {
-                if (starts_with(comment[i], "Trident/")) {
-                    switch (atoi(comment[i].c_str())) {
-                        case 4:
-                            p.browser.Version = "8.0";
-                            break;
-                        case 5:
-                            p.browser.Version = "9.0";
-                            break;
-                        case 6:
-                            p.browser.Version = "10.0";
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                }
-            }
-            if (p.browser.Version == "") {
-                p.browser.Version = trim_copy(comment[1]);
-            }
-        }
-    }
-}
-
 
 void getSubStr(char *sub, const string ua, int start, int end) {
     if (end - start > 0) {
@@ -244,7 +144,7 @@ void Parse(UserAgent& p, string ua) {
 
 void echo_ua(UserAgent& p) {
 
-    cout << "raw: " << p.ua << endl;
+    cout << p.ua << endl;
 
     cout << "browser Name: " << p.browser.Name << endl;
     cout << "browser Version: " << p.browser.Version << endl;
@@ -263,7 +163,8 @@ void echo_ua(UserAgent& p) {
 
 
 int main(int argc, char **argv) {
-    string ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0b8) Gecko/20100101 Firefox/4.0b8";
+    string ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            " (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.10240";
     if (argc < 2) {
         printf("Usage: %s  <loop-count>\n", argv[0]);
         exit(0);

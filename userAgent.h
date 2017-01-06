@@ -49,4 +49,5 @@ struct UserAgent {
 bool googleBot(UserAgent& p);
 void detectOS(UserAgent& p, Section& s);
 void checkBot(UserAgent& p, vector<Section>& sections);
+void detectBrowser(UserAgent& p, vector<Section>& sections);
 #endif //MAFIA_UA_H
