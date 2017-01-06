@@ -207,21 +207,44 @@ void Parse(UserAgent& p, string ua) {
         }
 
         detectBrowser(p, sections);
-        //detectOS(p, sections[0]);
+        detectOS(p, sections[0]);
 
         if (p.undecided) {
-            //checkBot(p, sections);
+            checkBot(p, sections);
         }
 
     }
 }
 
 
+
+void echo_ua(UserAgent& p) {
+
+    cout << "raw: " << p.ua << endl;
+
+    cout << "browser Name: " << p.browser.Name << endl;
+    cout << "browser Version: " << p.browser.Version << endl;
+    cout << "browser Engine: " << p.browser.Engine << endl;
+    cout << "browser EngineVersion: " << p.browser.EngineVersion << endl;
+
+    cout << "os: " << p.os << endl;
+    cout << "platfrom: " << p.platform << endl;
+    cout << "local: " << p.localization << endl;
+    cout << "mozilla: " << p.mozilla << endl;
+
+    cout << "is bot: " << p.bot << endl;
+    cout << "is mobile: " << p.mobile << endl;
+    cout << "is undecided: " << p.undecided << endl;
+}
+
+
 int main(int argc, char **argv) {
-    const string ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0b8) Gecko/20100101 Firefox/4.0b8";
+    string ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0b8) Gecko/20100101 Firefox/4.0b8";
     if (argc < 2) {
         printf("Usage: %s  <loop-count>\n", argv[0]);
         exit(0);
+    } else if (argc == 3) {
+        ua = argv[2];
     }
 
     int i;
@@ -232,11 +255,7 @@ int main(int argc, char **argv) {
     for (i = 0; i < loop; i++) {
         UserAgent p;
         Parse(p, ua);
-        cout << "raw: " << ua << endl;
-        cout << "browser Name: " << p.browser.Name << endl;
-        cout << "browser Version: " << p.browser.Version << endl;
-        cout << "browser Engine: " << p.browser.Engine << endl;
-        cout << "browser EngineVersion: " << p.browser.EngineVersion << endl;
+//        echo_ua(p);
     }
     gettimeofday(&end, NULL);
 

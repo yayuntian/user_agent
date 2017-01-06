@@ -1,6 +1,6 @@
 LIBS=-lboost_regex
 ifndef CXXFLAGS
-	CXXFLAGS=-std=c++0x -Wall -fPIC -g -O0 -Werror
+	CXXFLAGS=-std=c++0x -Wall -fPIC -g -O3 -Werror
 endif
 
 OBJS = ua.o os.o bot.o
