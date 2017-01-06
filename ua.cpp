@@ -14,11 +14,14 @@ using namespace std;
 using namespace boost::algorithm;
 
 #include "ua.h"
+#include "lrucache.h"
 
 using namespace std;
 
 
 boost::regex ie11Regexp{"^rv:(.+)$"};
+
+cache::lru_cache<string, UserAgent> cacheUA(1000);
 
 
 void detectBrowser(UserAgent& p, vector<Section>& sections) {
@@ -199,6 +202,11 @@ void initialize(UserAgent& p) {
 
 void Parse(UserAgent& p, string ua) {
 
+    if (cacheUA.exists(ua) == true) {
+        p = cacheUA.get(ua);
+        return;
+    }
+
     vector<Section> sections(10);
     initialize(p);
     p.ua = ua;
@@ -228,6 +236,7 @@ void Parse(UserAgent& p, string ua) {
             checkBot(p, sections);
         }
 
+        cacheUA.put(ua, p);
     }
 }
 
