@@ -3,7 +3,7 @@ ifndef CXXFLAGS
 	CXXFLAGS=-std=c++0x -Wall -fPIC -g -O0 -Werror
 endif
 
-OBJS = ua.o
+OBJS = ua.o os.o bot.o
 
 %.o: %.cpp
 	    $(CXX) $(CXXFLAGS) -c $<

@@ -216,22 +216,6 @@ void Parse(UserAgent& p, string ua) {
     }
 }
 
-string Mozilla(UserAgent& p) {
-    return p.mozilla;
-}
-
-string UA(UserAgent& p) {
-    return p.ua;
-}
-
-bool Bot(UserAgent& p) {
-    return p.bot;
-}
-
-bool Mobile(UserAgent& p) {
-    return p.mobile;
-}
-
 
 int main(int argc, char **argv) {
     const string ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:2.0b8) Gecko/20100101 Firefox/4.0b8";
@@ -253,11 +237,10 @@ int main(int argc, char **argv) {
         cout << "browser Version: " << p.browser.Version << endl;
         cout << "browser Engine: " << p.browser.Engine << endl;
         cout << "browser EngineVersion: " << p.browser.EngineVersion << endl;
-
     }
     gettimeofday(&end, NULL);
 
-    uint64_t time_cost = ((end.tv_sec - start.tv_sec) * 1000000 + \
+    long time_cost = ((end.tv_sec - start.tv_sec) * 1000000 + \
             end.tv_usec - start.tv_usec);
 
     printf("cost time: %ld us, %.2f pps\n", time_cost, loop / (time_cost * 1.0) * 1000000);

@@ -25,13 +25,11 @@ struct Browser {
     string Version;
 };
 
-
 struct OSInfo {
     string FUllName;
     string Name;
     string Version;
 };
-
 
 // The UserAgent struct contains all the info that can be extracted
 // from the User-Agent string.
@@ -47,4 +45,6 @@ struct UserAgent {
     bool mobile;
     bool undecided;
 };
+
+bool googleBot(UserAgent& p);
 #endif //MAFIA_UA_H
