@@ -24,11 +24,13 @@ boost::regex botRegexp{"(?i)(bot|crawler|sp(i|y)der|search|worm|fetch|nutch)"};
 
 
 string getFromSite(vector<string>& comment) {
-    if (comment.size() == 0) {
+    size_t slen = comment.size();
+
+    if (slen == 0) {
         return "";
     }
 
-    int idx = (comment.size() < 3) ? 0 : 2;
+    int idx = (slen < 3) ? 0 : 2;
     boost::smatch result;
 
     string ret = "";
@@ -78,7 +80,7 @@ void setSimple(UserAgent& p, string name, string version, bool bot) {
 }
 
 
-void fixOther(UserAgent& p, vector<Section> sections) {
+void fixOther(UserAgent& p, vector<Section>& sections) {
     if (sections.size() > 0) {
         p.browser.Name = sections[0].name;
         p.browser.Version = sections[0].version;
@@ -87,8 +89,10 @@ void fixOther(UserAgent& p, vector<Section> sections) {
 }
 
 
-void checkBot(UserAgent& p, vector<Section> sections) {
-    if (sections.size() == 1 && sections[0].name != "Mozilla") {
+void checkBot(UserAgent& p, vector<Section>& sections) {
+    size_t slen = sections.size();
+
+    if (slen == 1 && sections[0].name != "Mozilla") {
         p.mozilla = "";
         if (boost::regex_match(sections[0].name, botRegexp)) {
             setSimple(p, sections[0].name, "", true);
@@ -103,8 +107,8 @@ void checkBot(UserAgent& p, vector<Section> sections) {
 
         setSimple(p, sections[0].name, sections[0].version, false);
     } else {
-        for (auto s : sections) {
-            string name = getFromSite(s.comment);
+        for (size_t i = 0; i < slen; i++) {
+            string name = getFromSite(sections[i].comment);
             if (name != "") {
                 vector<string> s;
                 split(s, name, is_any_of("/"));

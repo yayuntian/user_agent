@@ -45,34 +45,38 @@ string normalizeOS(string name) {
         return name;
     }
 
-    if (sp[2] == "5.0") {
-        return "Windows 2000";
-    } else if (sp[2] == "5.01") {
-        return "Windows 2000, Service Pack 1 (SP1)";
-    } else if (sp[2] == "5.1") {
-        return "Windows XP";
-    } else if (sp[2] == "5.2") {
-        return "Windows XP x64 Edition";
-    } else if (sp[2] == "6.0") {
-        return "Windows Vista";
-    } else if (sp[2] == "6.1") {
-        return "Windows 7";
-    } else if (sp[2] == "6.2") {
-        return "Windows 8";
-    } else if (sp[2] == "6.3") {
-        return "Windows 8.1";
-    } else if (sp[2] == "10.0") {
-        return "Windows 10";
+    int version = atoi(replace_all_copy(sp[2], ".", "").c_str());
+    switch (version) {
+        case 50:
+            return "Windows 2000";
+        case 501:
+            return "Windows 2000, Service Pack 1 (SP1)";
+        case 51:
+            return "Windows XP";
+        case 52:
+            return "Windows XP x64 Edition";
+        case 60:
+            return "Windows Vista";
+        case 61:
+            return "Windows 7";
+        case 62:
+            return "Windows 8";
+        case 63:
+            return "Windows 8.1";
+        case 100:
+            return "Windows 10";
     }
     return name;
 }
 
 
 void webKit(UserAgent& p, vector<string>& comment) {
+    size_t slen = comment.size();
+
     if (p.platform == "webOS") {
         p.browser.Name = p.platform;
         p.os = "Palm";
-        if (comment.size() > 2) {
+        if (slen > 2) {
             p.localization = comment[2];
         }
         p.mobile = true;
@@ -85,9 +89,9 @@ void webKit(UserAgent& p, vector<string>& comment) {
         if (p.browser.Name == "Safari") {
             p.browser.Name = "Android";
         }
-        if (comment.size() > 1) {
+        if (slen > 1) {
             if (comment[1] == "U") {
-                if (comment.size() > 2) {
+                if (slen > 2) {
                     p.os = comment[2];
                 } else {
                     p.mobile = false;
@@ -97,19 +101,19 @@ void webKit(UserAgent& p, vector<string>& comment) {
                 p.os = comment[1];
             }
         }
-        if (comment.size() > 3) {
+        if (slen > 3) {
             p.localization = comment[3];
         }
-    } else if (comment.size() > 0) {
-        if (comment.size() > 3) {
+    } else if (slen > 0) {
+        if (slen > 3) {
             p.localization = comment[3];
         }
 
         if (starts_with(comment[0], "Windows NT")) {
             p.os = normalizeOS(comment[0]);
-        } else if (comment.size() < 2) {
+        } else if (slen < 2) {
             p.localization = comment[0];
-        } else if (comment.size() < 3) {
+        } else if (slen < 3) {
             if (!googleBot(p)) {
                 p.os = normalizeOS(comment[1]);
             }
@@ -127,12 +131,13 @@ void webKit(UserAgent& p, vector<string>& comment) {
 
 
 void gecko(UserAgent& p, vector<string>& comment) {
-    if (comment.size() <= 1) {
+    size_t slen = comment.size();
+    if (slen <= 1) {
         return;
     }
 
     if (comment[1] == "U") {
-        if (comment.size() > 2) {
+        if (slen > 2) {
             p.os = normalizeOS(comment[2]);
         } else {
             p.os = normalizeOS(comment[1]);
@@ -152,25 +157,25 @@ void gecko(UserAgent& p, vector<string>& comment) {
         }
     }
 
-    if (comment.size() > 3 && !starts_with(comment[3], "rv:")) {
+    if (slen > 3 && !starts_with(comment[3], "rv:")) {
         p.localization = comment[3];
     }
 }
 
 
 void trident(UserAgent& p, vector<string>& comment) {
+    size_t slen = comment.size();
     p.platform = "Windows";
 
     if (p.os == "") {
-        if (comment.size() > 2) {
+        if (slen > 2) {
             p.os = normalizeOS(comment[2]);
         } else {
             p.os = "Windows NT 4.0";
         }
     }
-
-    for (string s : comment) {
-        if (starts_with(s, "IEMobile")) {
+    for (size_t i = 0; i < slen; i++) {
+        if (starts_with(comment[i], "IEMobile")) {
             p.mobile = true;
             return;
         }
@@ -237,14 +242,15 @@ vector<string> split_v(const vector<string>& data, int start, int end)
 
 
 void osName(vector<string>& osSplit, string& name, string& version) {
+    size_t os_len = osSplit.size();
     OSInfo osInfo;
 
-    if (osSplit.size() == 1) {
+    if (os_len == 1) {
         name = osSplit[0];
         version = "";
     } else {
-        vector<string> nameSplit = split_v(osSplit, 0, osSplit.size() - 1);
-        version = osSplit[osSplit.size() - 1];
+        vector<string> nameSplit = split_v(osSplit, 0, os_len - 1);
+        version = osSplit[os_len - 1];
 
         if (nameSplit.size() > 2 && nameSplit[0] == "Intel" &&
                 nameSplit[1] == "Mac") {
@@ -279,7 +285,7 @@ OSInfo getOSInfo(UserAgent& p) {
     osName(osSplit, name, version);
 
     if (contains(name, "/")) {
-        vector<string> s;
+        vector<string> s(2);
         split(s, name, is_any_of("/"));
         name = s[0];
         version = s[1];
@@ -292,14 +298,15 @@ OSInfo getOSInfo(UserAgent& p) {
             .Name = name,
             .Version = version
     };
-
 }
 
 
 void detectOS(UserAgent& p, Section& s) {
+    size_t slen = s.comment.size();
+
     if (s.name == "Mozilla") {
         p.platform = getPlatform(s.comment);
-        if (p.platform == "Windows" && s.comment.size() > 0) {
+        if (p.platform == "Windows" && slen > 0) {
             p.os = normalizeOS(s.comment[0]);
         }
 
@@ -313,11 +320,11 @@ void detectOS(UserAgent& p, Section& s) {
             trident(p, s.comment);
         }
     } else if (s.name == "Opera") {
-        if (s.comment.size() > 0) {
+        if (slen > 0) {
             opera(p, s.comment);
         }
     } else if (s.name == "Dalvik") {
-        if (s.comment.size() > 0) {
+        if (slen > 0) {
             dalvik(p, s.comment);
         }
     } else {

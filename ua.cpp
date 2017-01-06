@@ -21,10 +21,9 @@ using namespace std;
 boost::regex ie11Regexp{"^rv:(.+)$"};
 
 
-void detectBrowser(UserAgent& p, vector<Section> sections) {
+void detectBrowser(UserAgent& p, vector<Section>& sections) {
 
     int slen = sections.size();
-
     if (sections[0].name == "Opera") {
         p.browser.Name = "Opera";
         p.browser.Version = sections[0].version;
@@ -85,20 +84,28 @@ void detectBrowser(UserAgent& p, vector<Section> sections) {
         }
     } else if (slen == 1 && sections[0].comment.size() > 1) {
         vector<string> comment = sections[0].comment;
-        if (comment[0] == "compatible" &&
-                strncmp(comment[1].c_str(), "MSIE", strlen("MSIE")) == 0) {
+        if (comment[0] == "compatible" && starts_with(comment[1], "MSIE")) {
             p.browser.Name = "Internet Explorer";
             p.browser.Engine = "Trident";
 
-            for (auto c : comment) {
-                if (c == "4.0") {
-                    p.browser.Version = "8.0";
-                } else if (c == "5.0") {
-                    p.browser.Version = "9.0";
-                } else if (c == "6.0") {
-                    p.browser.Version = "10.0";
+            size_t len = comment.size();
+            for (size_t i = 0; i < len; i++) {
+                if (starts_with(comment[i], "Trident/")) {
+                    switch (atoi(comment[i].c_str())) {
+                        case 4:
+                            p.browser.Version = "8.0";
+                            break;
+                        case 5:
+                            p.browser.Version = "9.0";
+                            break;
+                        case 6:
+                            p.browser.Version = "10.0";
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
                 }
-                break;
             }
             if (p.browser.Version == "") {
                 p.browser.Version = trim_copy(comment[1]);
@@ -108,33 +115,41 @@ void detectBrowser(UserAgent& p, vector<Section> sections) {
 }
 
 
-string readUtil(string ua, int& index, char delimiter, bool cat) {
-    string buffer;
+void getSubStr(char *sub, const string ua, int start, int end) {
+    if (end - start > 0) {
+        const char *p = ua.c_str();
+        strncpy(sub, p + start, end - start);
+    }
+}
+
+
+string readUtil(string& ua, int& index, char delimiter, bool cat) {
     int catalan = 0;
     int len = ua.size();
-
     int i = index;
+    char buf[256] = {0,};
 
     for (; i < len; i++) {
         if (ua[i] == delimiter) {
             if (catalan == 0) {
+                getSubStr(buf, ua, index, i);
                 index = i + 1;
-                return buffer;
+                return buf;
             }
             catalan--;
         } else if (cat && ua[i] == '(') {
             catalan++;
         }
-        buffer += ua[i];
     }
+    getSubStr(buf, ua, index, i);
     index = i + 1;
-    return buffer;
+    return buf;
 }
 
 
 void parseProduct(Section& s, string product) {
 
-    std::vector<std::string> v;
+    std::vector<std::string> v(2);
     split(v, product, is_any_of("/"));
 
     if (v.size() == 2) {
@@ -148,7 +163,7 @@ void parseProduct(Section& s, string product) {
 }
 
 
-Section parseSection(string ua, int& index) {
+Section parseSection(string& ua, int& index) {
     string buffer = readUtil(ua, index, ' ', false);
 
     Section s;
@@ -158,7 +173,6 @@ Section parseSection(string ua, int& index) {
         index++;
         buffer = readUtil(ua, index, ')', true);
         //split(s.comment, buffer, is_any_of("; "));
-
         split_regex(s.comment, buffer, boost::regex("; ")) ;
         index++;
     }
@@ -185,20 +199,21 @@ void initialize(UserAgent& p) {
 
 void Parse(UserAgent& p, string ua) {
 
-    vector<Section> sections;
-
+    vector<Section> sections(10);
     initialize(p);
     p.ua = ua;
 
     int index = 0;
     int limit = ua.size();
+    int count = 0;
 
     while (index < limit) {
         Section s = parseSection(ua, index);
         if (!p.mobile && s.name == "Mobile") {
             p.mobile = true;
         }
-        sections.push_back(s);
+//        sections.push_back(s);
+        sections[count++] = s;
     }
 
     if (sections.size() > 0) {
@@ -255,7 +270,10 @@ int main(int argc, char **argv) {
     for (i = 0; i < loop; i++) {
         UserAgent p;
         Parse(p, ua);
-//        echo_ua(p);
+        if (i == 0) {
+            echo_ua(p);
+        }
+
     }
     gettimeofday(&end, NULL);
 
