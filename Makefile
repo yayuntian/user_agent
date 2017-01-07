@@ -9,6 +9,7 @@ KAFKA_LIBS = -lrdkafka
 
 OBJS = userAgent.o operatingSystem.o bot.o browser.o
 KAFKA_OBJS = kafkaConsumer.o
+KAFKA_CAT = kafkacat.o
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $<
@@ -16,7 +17,7 @@ KAFKA_OBJS = kafkaConsumer.o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
 
-all: mafia kafkaConsumer
+all: mafia kafkaConsumer kafkacat
 
 mafia: $(OBJS)
 	$(CXX) -o $@ $(OBJS) $(LIBS)
@@ -24,5 +25,8 @@ mafia: $(OBJS)
 kafkaConsumer: $(KAFKA_OBJS)
 	$(CC) -o $@ $(KAFKA_OBJS) $(KAFKA_LIBS)
 
+kafkacat: $(KAFKA_CAT)
+	$(CC) -o $@ $(KAFKA_CAT) $(KAFKA_LIBS)
+	
 clean:
 	rm -f *.o mafia kafkaConsumer
