@@ -1,6 +1,8 @@
 LIBS=-lboost_regex
+
+CFLAGS= -Wall -g -O3 -Werror
 ifndef CXXFLAGS
-	CXXFLAGS=-std=c++0x -Wall -fPIC -g -O3 -Werror
+	CXXFLAGS=-std=c++0x $(CFLAGS)
 endif
 
 KAFKA_LIBS = -lrdkafka
@@ -11,13 +13,16 @@ KAFKA_OBJS = kafkaConsumer.o
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $<
 
-all: mafia
+%.o: %.c
+	$(CC) $(CFLAGS) -c $<
+
+all: mafia kafkaConsumer
 
 mafia: $(OBJS)
 	$(CXX) -o $@ $(OBJS) $(LIBS)
 
 kafkaConsumer: $(KAFKA_OBJS)
-	$(CXX) -o $@ $(KAFKA_OBJS) $(KAFKA_LIBS)
+	$(CC) -o $@ $(KAFKA_OBJS) $(KAFKA_LIBS)
 
 clean:
 	rm -f *.o mafia kafkaConsumer

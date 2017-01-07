@@ -1,21 +1,17 @@
 //
 // Created by tyy on 2017/1/6.
 //
-#include <iostream>
-#include <string>
-#include <cstdlib>
-#include <cstdio>
-#include <csignal>
-#include <cstring>
-#include <sys/time.h>
-#include <stdarg.h>
-#include <getopt.h>
+#include <ctype.h>
+#include <signal.h>
+#include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <syslog.h>
+#include <sys/time.h>
+#include <errno.h>
+#include <getopt.h>
 
 #include "rdkafka.h"
-
-using namespace std;
-
 
 static int run = 1;
 static rd_kafka_t *rk;
@@ -143,9 +139,9 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
 
 
 int main(int argc, char **argv) {
-	//string brokers = "10.161.166.192:8301";
-    string brokers = "localhost:9200";
-    string group = "";
+	//char *brokers = "10.161.166.192:8301";
+    char *brokers = "localhost:9200";
+    char *group = NULL;
 
 	int opt;
 	rd_kafka_conf_t *conf;
@@ -184,17 +180,17 @@ int main(int argc, char **argv) {
                     "\n"
                     "  -g <group>      Consumer group (%s)\n"
                     "  -b <brokers>    Broker address (%s)\n",
-                    argv[0], group.c_str(), brokers.c_str());
+                    argv[0], group, brokers);
                 exit(1);
 		}
 	}
 
 	signal(SIGINT, stop);
 
-	if (group.empty()) {
+	if (!group) {
 		group = "rdkafka_consumer_mafia";
 	}
-	if (rd_kafka_conf_set(conf, "group.id", group.c_str(),
+	if (rd_kafka_conf_set(conf, "group.id", group,
 				errstr, sizeof(errstr)) !=
 			RD_KAFKA_CONF_OK) {
 		fprintf(stderr, "%% %s\n", errstr);
@@ -227,7 +223,7 @@ int main(int argc, char **argv) {
 	rd_kafka_set_log_level(rk, 7);  //debug(7)
 
 	/* Add brokers */
-	if (rd_kafka_brokers_add(rk, brokers.c_str()) == 0) {
+	if (rd_kafka_brokers_add(rk, brokers) == 0) {
 		fprintf(stderr, "%% No valid brokers specified\n");
 		exit(1);
 	}
