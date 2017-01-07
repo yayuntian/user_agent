@@ -139,34 +139,36 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
 
 
 int main(int argc, char **argv) {
-	//char *brokers = "10.161.166.192:8301";
-    char *brokers = "localhost:9200";
+    char *brokers = "localhost:9200";   //"10.161.166.192:8301"
     char *group = NULL;
+    int64_t offset;
 
-	int opt;
-	rd_kafka_conf_t *conf;
-	rd_kafka_topic_conf_t *topic_conf;
+    rd_kafka_conf_t *conf;
+    rd_kafka_topic_conf_t *topic_conf;
+    rd_kafka_topic_partition_list_t *topics;
+    rd_kafka_resp_err_t err;
+
+	int i, opt;
 	char errstr[512];
-	char tmp[16];
-	rd_kafka_resp_err_t err;
-	rd_kafka_topic_partition_list_t *topics;
 	int is_subscription;
-	int i;
+#ifdef SIGIO
+    char tmp[16];
+#endif
 
 	/* Kafka configuration */
 	conf = rd_kafka_conf_new();
+    /* Topic configuration */
+    topic_conf = rd_kafka_topic_conf_new();
 
 	/* Set logger */
 	rd_kafka_conf_set_log_cb(conf, logger);
-
+#ifdef SIGIO
 	/* Quick termination */
 	snprintf(tmp, sizeof(tmp), "%i", SIGIO);
 	rd_kafka_conf_set(conf, "internal.termination.signal", tmp, NULL, 0);
+#endif
 
-	/* Topic configuration */
-	topic_conf = rd_kafka_topic_conf_new();
-
-	while ((opt = getopt(argc, argv, "g:b:h")) != -1) {
+	while ((opt = getopt(argc, argv, "g:o:b:h")) != -1) {
 		switch (opt) {
 			case 'b':
 				brokers = optarg;
@@ -174,6 +176,20 @@ int main(int argc, char **argv) {
 			case 'g':
 				group = optarg;
 				break;
+            case 'o':
+                if (!strcmp(optarg, "end")) {
+                    offset = RD_KAFKA_OFFSET_END;
+                } else if (!strcmp(optarg, "beginning")) {
+                    offset = RD_KAFKA_OFFSET_BEGINNING;
+                } else if (!strcmp(optarg, "stored")) {
+                    offset = RD_KAFKA_OFFSET_STORED;
+                } else {
+                    offset = strtoll(optarg, NULL, 10);
+                    if (offset < 0) {
+                        offset = RD_KAFKA_OFFSET_TAIL(-offset);
+                    }
+                }
+                break;
 			case 'h':
 			default:
                 fprintf(stderr, "\"Usage: %s [options] topic\n"
@@ -197,6 +213,7 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
+#if 0
 	/* Consumer groups always use broker based offset storage */
 	if (rd_kafka_topic_conf_set(topic_conf, "offset.store.method",
 				"broker",
@@ -205,6 +222,7 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "%% %s\n", errstr);
 		exit(1);
 	}
+#endif
 
 	/* Set default topic config for pattern-matched topics. */
 	rd_kafka_conf_set_default_topic_conf(conf, topic_conf);
@@ -221,6 +239,14 @@ int main(int argc, char **argv) {
 	}
 
 	rd_kafka_set_log_level(rk, 7);  //debug(7)
+
+    /* The callback-based consumer API's offset store granularity is
+ * not good enough for us, disable automatic offset store
+ * and do it explicitly per-message in the consume callback instead. */
+    if (rd_kafka_topic_conf_set(conf.rkt_conf,
+                                "auto.commit.enable", "false",
+                                errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK)
+        FATAL("%s", errstr);
 
 	/* Add brokers */
 	if (rd_kafka_brokers_add(rk, brokers) == 0) {
