@@ -16,6 +16,10 @@
 
 #include "rdkafka.h"
 
+#define log_err(fmt, args...)   fprintf(stderr, fmt, ##args)
+#define log_info(fmt, args...)  printf(fmt, ##args)
+
+
 static int run = 1;
 const static uint64_t msg_count = 10;
 static uint64_t rx_count = 0;
@@ -24,7 +28,6 @@ static void stop (int sig) {
     if (!run) {
         exit(1);
     }
-
     run = 0;
 }
 
@@ -36,7 +39,7 @@ static void logger (const rd_kafka_t *rk, int level,
                     const char *fac, const char *buf) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    fprintf(stdout, "%u.%03u RDKAFKA-%i-%s: %s: %s\n",
+    log_info("%u.%03u RDKAFKA-%i-%s: %s: %s\n",
             (int)tv.tv_sec, (int)(tv.tv_usec / 1000),
             level, fac, rd_kafka_name(rk), buf);
 }
@@ -57,8 +60,7 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
 
     if (rkmessage->err) {
         if (rkmessage->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
-            fprintf(stderr,
-                    "%% Consumer reached end of %s [%d] "
+            log_err("%% Consumer reached end of %s [%d] "
                             "message queue at offset %ld\n",
                     rd_kafka_topic_name(rkmessage->rkt),
                     rkmessage->partition, rkmessage->offset);
@@ -66,7 +68,7 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
         }
 
         if (rkmessage->rkt) {
-            fprintf(stderr, "%% Consume error for "
+            log_err("%% Consume error for "
                             "topic \"%s\" [%d] "
                             "offset %ld: %s\n",
                     rd_kafka_topic_name(rkmessage->rkt),
@@ -74,7 +76,7 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
                     rkmessage->offset,
                     rd_kafka_message_errstr(rkmessage));
         } else {
-            fprintf(stderr, "%% Consumer error: %s: %s\n",
+            log_err("%% Consumer error: %s: %s\n",
                 rd_kafka_err2str(rkmessage->err),
                 rd_kafka_message_errstr(rkmessage));
         }
@@ -87,17 +89,17 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
         return;
     }
 
-    fprintf(stderr, "%% Message (topic %s [%d], "
+    log_err("%% Message (topic %s [%d], "
                     "offset %ld, %zd bytes):\n",
             rd_kafka_topic_name(rkmessage->rkt),
             rkmessage->partition,
             rkmessage->offset, rkmessage->len);
 
     if (rkmessage->key_len) {
-        printf("Key: %.*s\n", (int)rkmessage->key_len, (char *)rkmessage->key);
+        log_info("Key: %.*s\n", (int)rkmessage->key_len, (char *)rkmessage->key);
     }
 
-    //printf("%.*s\n", (int)rkmessage->len, (char *)rkmessage->payload);
+    //log_info("%.*s\n", (int)rkmessage->len, (char *)rkmessage->payload);
 
     if (++rx_count == msg_count) {
         run = 0;
@@ -111,13 +113,13 @@ static void print_partition_list (FILE *fp,
                                   *partitions) {
     int i;
     for (i = 0 ; i < partitions->cnt ; i++) {
-        fprintf(stderr, "%s %s [%d] offset %ld",
+        log_err("%s %s [%d] offset %ld",
                 i > 0 ? ",":"",
                 partitions->elems[i].topic,
                 partitions->elems[i].partition,
                 partitions->elems[i].offset);
     }
-    fprintf(stderr, "\n");
+    log_err("\n");
 
 }
 
@@ -132,7 +134,7 @@ static RD_UNUSED void set_partition_offset (rd_kafka_topic_partition_list_t
         if ((part = rd_kafka_topic_partition_list_find(partitions, topic, partition))) {
             part->offset = offset;
         } else {
-            fprintf(stderr, "set partition offset error: %s[%d] offset:%ld\n",
+            log_err("set partition offset error: %s[%d] offset:%ld\n",
             topic, partition, offset);
         }
     }
@@ -144,11 +146,11 @@ static void rebalance_cb (rd_kafka_t *rk,
                           rd_kafka_topic_partition_list_t *partitions,
                           void *opaque) {
 
-    fprintf(stderr, "%% Consumer group rebalanced: ");
+    log_err("%% Consumer group rebalanced: ");
 
     switch (err)  {
         case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-            fprintf(stderr, "assigned:\n");
+            log_err("assigned:\n");
 
             set_partition_offset(partitions, RD_KAFKA_OFFSET_STORED);
 
@@ -157,13 +159,13 @@ static void rebalance_cb (rd_kafka_t *rk,
             break;
 
         case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
-            fprintf(stderr, "revoked:\n");
+            log_err("revoked:\n");
             print_partition_list(stderr, partitions);
             rd_kafka_assign(rk, NULL);
             break;
 
         default:
-            fprintf(stderr, "failed: %s\n", rd_kafka_err2str(err));
+            log_err("failed: %s\n", rd_kafka_err2str(err));
             rd_kafka_assign(rk, NULL);
             break;
     }
@@ -211,7 +213,7 @@ int main (int argc, char **argv) {
     if (rd_kafka_conf_set(conf, "group.id", group,
                           errstr, sizeof(errstr)) !=
         RD_KAFKA_CONF_OK) {
-        fprintf(stderr, "%% %s\n", errstr);
+        log_err("%% %s\n", errstr);
         exit(1);
     }
 
@@ -220,23 +222,9 @@ int main (int argc, char **argv) {
                                 "broker",
                                 errstr, sizeof(errstr)) !=
         RD_KAFKA_CONF_OK) {
-        fprintf(stderr, "%% %s\n", errstr);
+        log_err("%% %s\n", errstr);
         exit(1);
     }
-
-
-    // earliest  latest      default: latest
-    if (rd_kafka_topic_conf_set(topic_conf, "auto.offset.reset", "latest",
-                                errstr, sizeof(errstr)) !=
-        RD_KAFKA_CONF_OK) {
-        fprintf(stderr, "%% %s\n", errstr);
-        exit(1);
-    }
-
-//    fetch.message.max.bytes   1 * 1024 * 1024
-//    socket.keepalive.enable   false
-//    socket.max.fails          3
-
 
     /* Set default topic config for pattern-matched topics. */
     rd_kafka_conf_set_default_topic_conf(conf, topic_conf);
@@ -247,8 +235,7 @@ int main (int argc, char **argv) {
     /* Create Kafka handle */
     if (!(rk = rd_kafka_new(RD_KAFKA_CONSUMER, conf,
                             errstr, sizeof(errstr)))) {
-        fprintf(stderr,
-                "%% Failed to create new consumer: %s\n",
+        log_err("%% Failed to create new consumer: %s\n",
                 errstr);
         exit(1);
     }
@@ -257,7 +244,7 @@ int main (int argc, char **argv) {
 
     /* Add brokers */
     if (rd_kafka_brokers_add(rk, brokers) == 0) {
-        fprintf(stderr, "%% No valid brokers specified\n");
+        log_err("%% No valid brokers specified\n");
         exit(1);
     }
 
@@ -269,11 +256,10 @@ int main (int argc, char **argv) {
     topics = rd_kafka_topic_partition_list_new(topic_count);
     rd_kafka_topic_partition_list_add(topics, topic, partition);
 
-    fprintf(stderr, "%% Subscribing to %d topics\n", topics->cnt);
+    log_err("%% Subscribing to %d topics\n", topics->cnt);
 
     if ((err = rd_kafka_subscribe(rk, topics))) {
-        fprintf(stderr,
-                "%% Failed to start consuming topics: %s\n",
+        log_err("%% Failed to start consuming topics: %s\n",
                 rd_kafka_err2str(err));
         exit(1);
     }
@@ -291,10 +277,10 @@ int main (int argc, char **argv) {
 
     err = rd_kafka_consumer_close(rk);
     if (err) {
-        fprintf(stderr, "%% Failed to close consumer: %s\n",
+        log_err("%% Failed to close consumer: %s\n",
                 rd_kafka_err2str(err));
     } else {
-        fprintf(stderr, "%% Consumer closed\n");
+        log_err("%% Consumer closed\n");
     }
 
     /* Destroy handle */
@@ -303,7 +289,7 @@ int main (int argc, char **argv) {
     /* Let background threads clean up and terminate cleanly. */
     run = 5;
     while (run-- > 0 && rd_kafka_wait_destroyed(1000) == -1)
-        printf("Waiting for librdkafka to decommission\n");
+        log_info("Waiting for librdkafka to decommission\n");
     if (run <= 0)
         rd_kafka_dump(stdout, rk);
 
