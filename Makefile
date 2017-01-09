@@ -8,7 +8,7 @@ endif
 KAFKA_LIBS = -lrdkafka
 
 OBJS = userAgent.o operatingSystem.o bot.o browser.o
-KAFKA_OBJS = kafkaExample.o
+KAFKA_OBJS = kafkaConsumer.o
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $<
@@ -21,8 +21,8 @@ all: mafia kafkaExample
 mafia: $(OBJS)
 	$(CXX) -o $@ $(OBJS) $(LIBS)
 
-kafkaExample: $(KAFKA_OBJS)
+kafkaConsumer: $(KAFKA_OBJS)
 	$(CC) -o $@ $(KAFKA_OBJS) $(KAFKA_LIBS)
 	
 clean:
-	rm -f *.o mafia kafkaExample
+	rm -f *.o mafia kafkaConsumer
