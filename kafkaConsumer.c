@@ -14,19 +14,12 @@
 #include <errno.h>
 #include <getopt.h>
 
-#include "rdkafka.h"
 #include "kafkaConsumer.h"
-
-
-#define log_err(fmt, args...)   fprintf(stderr, fmt, ##args)
-#define log_info(fmt, args...)  printf(fmt, ##args)
-
 
 const static uint64_t msg_count = 10;
 static uint64_t rx_count = 0;
 
-
-struct kafkaConf kconf = {
+RD_UNUSED struct kafkaConf kconf = {
     .run = 1,
     .partition = RD_KAFKA_PARTITION_UA,
     .brokers = "10.161.166.192:8301",
@@ -110,7 +103,11 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
         log_info("Key: %.*s\n", (int)rkmessage->key_len, (char *)rkmessage->key);
     }
 
-    //log_info("%.*s\n", (int)rkmessage->len, (char *)rkmessage->payload);
+    if (kconf.payload_cb) {
+        kconf.payload_cb(rkmessage);
+    } else {
+        log_info("%.*s\n", (int)rkmessage->len, (char *)rkmessage->payload);
+    }
 
     if (++rx_count == msg_count) {
         kconf.run = 0;
@@ -181,7 +178,8 @@ static void rebalance_cb (rd_kafka_t *rk,
 }
 
 
-int main (int argc, char **argv) {
+//int main (int argc, char **argv) {
+int init_kafka_consumer(void) {
     char tmp[16];
     char errstr[512];
     rd_kafka_resp_err_t err;

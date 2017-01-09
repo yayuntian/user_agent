@@ -1,14 +1,15 @@
-LIBS=-lboost_regex
-
-CFLAGS= -Wall -g -O0 -Werror
-ifndef CXXFLAGS
-	CXXFLAGS=-std=c++0x $(CFLAGS)
-endif
+FLAGS= -Wall -g -O0 -Werror
+CXXFLAGS += -std=c++0x $(FLAGS)
+CFLAGS += -std=c99 -msse4.2 $(FLAGS)
 
 KAFKA_LIBS = -lrdkafka
+CXXLIBS = -lboost_regex
 
-OBJS = userAgent.o operatingSystem.o bot.o browser.o
-KAFKA_OBJS = kafkaConsumer.o
+OBJS = userAgent.o operatingSystem.o bot.o browser.o kafkaConsumer.o
+
+JSON_OBJS = main.o extractor.o
+
+TARGET = mafia
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $<
@@ -16,13 +17,14 @@ KAFKA_OBJS = kafkaConsumer.o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
 
-all: mafia kafkaExample
+all: $(TARGET)
 
-mafia: $(OBJS)
-	$(CXX) -o $@ $(OBJS) $(LIBS)
+$(TARGET): $(OBJS)
+	$(CXX) -o $@ $(OBJS) $(CXXLIBS) $(KAFKA_LIBS)
 
-kafkaConsumer: $(KAFKA_OBJS)
-	$(CC) -o $@ $(KAFKA_OBJS) $(KAFKA_LIBS)
-	
+json: $(JSON_OBJS)
+	$(CC) -o $@ $(JSON_OBJS) $(KAFKA_LIBS)
+
+.PHONY: clean
 clean:
-	rm -f *.o mafia kafkaConsumer
+	rm -f *.o $(TARGET)
