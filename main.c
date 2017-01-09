@@ -5,11 +5,21 @@
 
 int ip_enricher(struct enrichee *enrichee__)
 {
+    char str[256] = {0,};
+
+    strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
+    printf("orig_value: %s, len: %d\n",
+           str, enrichee__->orig_value_len);
     return 0;
 }
 
 int ua_enricher(struct enrichee *enrichee__)
 {
+    char str[256] = {0,};
+
+    strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
+    printf("orig_value: %s, len: %d\n",
+           str, enrichee__->orig_value_len);
     return 0;
 }
 
@@ -68,6 +78,7 @@ int main(int argc, char **argv)
 "        \"retransmitted_in_payload_pkts\": 0, "
 "        \"dst_ip\": 178808905, "
 "        \"in_bytes\": 62654, "
+        "\"user_agent\" : \"Mozilla/5.0 (Wind,:ow:\"s NT 10.0; Win64; x64) AppleWebKit/537.3\","
 "        \"retransmitted_out_ack_pkts\": 0, "
 "        \"server_latency_usec\": 5055, "
 "        \"client_latency_usec\": 6955, "
