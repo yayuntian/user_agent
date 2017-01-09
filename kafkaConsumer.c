@@ -15,7 +15,6 @@
 
 static int run = 1;
 static rd_kafka_t *rk;
-static int quiet = 0;
 
 static void stop (int sig) {
 	if (!run)
@@ -120,20 +119,19 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
 		return;
 	}
 
-	if (!quiet) {
-		fprintf(stdout, "%% Message (topic %s %d, "
-				"offset %ld, %zd bytes):\n",
-				rd_kafka_topic_name(rkmessage->rkt),
-				rkmessage->partition,
-				rkmessage->offset, rkmessage->len);
-	}
+	fprintf(stdout, "%% Message (topic %s %d, "
+			"offset %ld, %zd bytes):\n",
+			rd_kafka_topic_name(rkmessage->rkt),
+			rkmessage->partition,
+			rkmessage->offset, rkmessage->len);
+
 
 	if (rkmessage->key_len) {
 		printf("Key: %.*s\n",
 				(int)rkmessage->key_len, (char *)rkmessage->key);
 	}
 
-	printf("%.*s\n", (int)rkmessage->len, (char *)rkmessage->payload);
+	//printf("%.*s\n", (int)rkmessage->len, (char *)rkmessage->payload);
 }
 
 
@@ -239,14 +237,6 @@ int main(int argc, char **argv) {
 	}
 
 	rd_kafka_set_log_level(rk, 7);  //debug(7)
-
-    /* The callback-based consumer API's offset store granularity is
- * not good enough for us, disable automatic offset store
- * and do it explicitly per-message in the consume callback instead. */
-    if (rd_kafka_topic_conf_set(conf.rkt_conf,
-                                "auto.commit.enable", "false",
-                                errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK)
-        FATAL("%s", errstr);
 
 	/* Add brokers */
 	if (rd_kafka_brokers_add(rk, brokers) == 0) {
