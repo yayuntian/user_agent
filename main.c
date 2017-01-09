@@ -16,7 +16,7 @@ int ua_enricher(struct enrichee *enrichee__)
 uint64_t rdtsc()
 {
     unsigned long a, d;
-    asm volatile ("cpuid; rdtsc" : "=a" (a), "=d" (d) : : "ebx", "ecx");
+    __asm__ __volatile__("cpuid; rdtsc" : "=a" (a), "=d" (d) : : "ebx", "ecx");
     return a | ((uint64_t)d << 32);
 }
 

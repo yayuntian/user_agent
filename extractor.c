@@ -192,5 +192,6 @@ int extract(const char *buf, const char *buf_end)
 
         pos++;
     }
+    return 0;
 }
 
