@@ -15,20 +15,32 @@
 #include <getopt.h>
 
 #include "rdkafka.h"
+#include "kafkaConsumer.h"
+
 
 #define log_err(fmt, args...)   fprintf(stderr, fmt, ##args)
 #define log_info(fmt, args...)  printf(fmt, ##args)
 
 
-static int run = 1;
 const static uint64_t msg_count = 10;
 static uint64_t rx_count = 0;
 
+
+struct kafkaConf kconf = {
+    .run = 1,
+    .partition = RD_KAFKA_PARTITION_UA,
+    .brokers = "10.161.166.192:8301",
+    .group = "rdkafka_consumer_mafia",
+    .topic = "cloudsensor",     // now only one, fix it
+    .topic_count = 1
+};
+
+
 static void stop (int sig) {
-    if (!run) {
+    if (!kconf.run) {
         exit(1);
     }
-    run = 0;
+    kconf.run = 0;
 }
 
 
@@ -45,7 +57,6 @@ static void logger (const rd_kafka_t *rk, int level,
 }
 
 
-
 /**
  * Handle and print a consumed message.
  * Internally crafted messages are also used to propagate state from
@@ -54,7 +65,7 @@ static void logger (const rd_kafka_t *rk, int level,
  */
 static void msg_consume (rd_kafka_message_t *rkmessage,
                          void *opaque) {
-    if (run == 0) {
+    if (kconf.run == 0) {
         return;
     }
 
@@ -83,7 +94,7 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
 
         if (rkmessage->err == RD_KAFKA_RESP_ERR__UNKNOWN_PARTITION ||
             rkmessage->err == RD_KAFKA_RESP_ERR__UNKNOWN_TOPIC) {
-            run = 0;
+            kconf.run = 0;
         }
 
         return;
@@ -102,18 +113,17 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
     //log_info("%.*s\n", (int)rkmessage->len, (char *)rkmessage->payload);
 
     if (++rx_count == msg_count) {
-        run = 0;
+        kconf.run = 0;
     }
 
 }
 
 
-static void print_partition_list (FILE *fp,
-                                  const rd_kafka_topic_partition_list_t
+static void print_partition_list (const rd_kafka_topic_partition_list_t
                                   *partitions) {
     int i;
     for (i = 0 ; i < partitions->cnt ; i++) {
-        log_err("%s %s [%d] offset %ld",
+        log_err("%s topic: %s[%d] offset %ld",
                 i > 0 ? ",":"",
                 partitions->elems[i].topic,
                 partitions->elems[i].partition,
@@ -145,7 +155,6 @@ static void rebalance_cb (rd_kafka_t *rk,
                           rd_kafka_resp_err_t err,
                           rd_kafka_topic_partition_list_t *partitions,
                           void *opaque) {
-
     log_err("%% Consumer group rebalanced: ");
 
     switch (err)  {
@@ -154,13 +163,13 @@ static void rebalance_cb (rd_kafka_t *rk,
 
             set_partition_offset(partitions, RD_KAFKA_OFFSET_STORED);
 
-            print_partition_list(stderr, partitions);
+            print_partition_list(partitions);
             rd_kafka_assign(rk, partitions);
             break;
 
         case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
             log_err("revoked:\n");
-            print_partition_list(stderr, partitions);
+            print_partition_list(partitions);
             rd_kafka_assign(rk, NULL);
             break;
 
@@ -173,125 +182,98 @@ static void rebalance_cb (rd_kafka_t *rk,
 
 
 int main (int argc, char **argv) {
-    static rd_kafka_t *rk;
-    char *brokers = "10.161.166.192:8301";
-    char *group = "testkafka-offset-begin";
-
-    // topic == topic_count
-    char *topic = "cloudsensor";
-    int32_t topic_count = 1;
-
-    int32_t partition = RD_KAFKA_PARTITION_UA;
-    rd_kafka_conf_t *conf;
-    rd_kafka_topic_conf_t *topic_conf;
-    char errstr[512];
     char tmp[16];
+    char errstr[512];
     rd_kafka_resp_err_t err;
 
-    rd_kafka_topic_partition_list_t *topics;
-
     /* Kafka configuration */
-    conf = rd_kafka_conf_new();
+    kconf.rk_conf = rd_kafka_conf_new();
 
     /* Set logger */
-    rd_kafka_conf_set_log_cb(conf, logger);
+    rd_kafka_conf_set_log_cb(kconf.rk_conf, logger);
 
     /* Quick termination */
     snprintf(tmp, sizeof(tmp), "%i", SIGIO);
-    rd_kafka_conf_set(conf, "internal.termination.signal", tmp, NULL, 0);
+    rd_kafka_conf_set(kconf.rk_conf, "internal.termination.signal", tmp, NULL, 0);
 
     /* Topic configuration */
-    topic_conf = rd_kafka_topic_conf_new();
+    kconf.rkt_conf = rd_kafka_topic_conf_new();
 
     signal(SIGINT, stop);
 
     /* Consumer groups require a group id */
-    if (!group) {
-        group = "rdkafka_consumer_example";
-    }
-
-    if (rd_kafka_conf_set(conf, "group.id", group,
+    if (rd_kafka_conf_set(kconf.rk_conf, "group.id", kconf.group,
                           errstr, sizeof(errstr)) !=
         RD_KAFKA_CONF_OK) {
         log_err("%% %s\n", errstr);
         exit(1);
     }
 
-    /* Consumer groups always use broker based offset storage */
-    if (rd_kafka_topic_conf_set(topic_conf, "offset.store.method",
-                                "broker",
-                                errstr, sizeof(errstr)) !=
-        RD_KAFKA_CONF_OK) {
-        log_err("%% %s\n", errstr);
-        exit(1);
-    }
-
     /* Set default topic config for pattern-matched topics. */
-    rd_kafka_conf_set_default_topic_conf(conf, topic_conf);
+    rd_kafka_conf_set_default_topic_conf(kconf.rk_conf, kconf.rkt_conf);
 
     /* Callback called on partition assignment changes */
-    rd_kafka_conf_set_rebalance_cb(conf, rebalance_cb);
+    rd_kafka_conf_set_rebalance_cb(kconf.rk_conf, rebalance_cb);
 
     /* Create Kafka handle */
-    if (!(rk = rd_kafka_new(RD_KAFKA_CONSUMER, conf,
+    if (!(kconf.rk = rd_kafka_new(RD_KAFKA_CONSUMER, kconf.rk_conf,
                             errstr, sizeof(errstr)))) {
-        log_err("%% Failed to create new consumer: %s\n",
-                errstr);
+        log_err("%% Failed to create new consumer: %s\n", errstr);
         exit(1);
     }
 
-    rd_kafka_set_log_level(rk, LOG_DEBUG);
+    rd_kafka_set_log_level(kconf.rk, LOG_DEBUG);
 
     /* Add brokers */
-    if (rd_kafka_brokers_add(rk, brokers) == 0) {
+    if (rd_kafka_brokers_add(kconf.rk, kconf.brokers) == 0) {
         log_err("%% No valid brokers specified\n");
         exit(1);
     }
 
     /* Redirect rd_kafka_poll() to consumer_poll() */
-    rd_kafka_poll_set_consumer(rk);
+    rd_kafka_poll_set_consumer(kconf.rk);
 
+    // TODO: just support one topic, fix it according to the parameter
+    kconf.rktp = rd_kafka_topic_partition_list_new(kconf.topic_count);
+    rd_kafka_topic_partition_list_add(kconf.rktp, kconf.topic, kconf.partition);
 
-    // fix topic count
-    topics = rd_kafka_topic_partition_list_new(topic_count);
-    rd_kafka_topic_partition_list_add(topics, topic, partition);
+    log_err("%% Subscribing to %d topics\n", kconf.rktp->cnt);
 
-    log_err("%% Subscribing to %d topics\n", topics->cnt);
-
-    if ((err = rd_kafka_subscribe(rk, topics))) {
+    if ((err = rd_kafka_subscribe(kconf.rk, kconf.rktp))) {
         log_err("%% Failed to start consuming topics: %s\n",
                 rd_kafka_err2str(err));
         exit(1);
     }
-    rd_kafka_topic_partition_list_destroy(topics);
+    rd_kafka_topic_partition_list_destroy(kconf.rktp);
 
-    while (run) {
+    while (kconf.run) {
         rd_kafka_message_t *rkmessage;
 
-        rkmessage = rd_kafka_consumer_poll(rk, 1000);
+        rkmessage = rd_kafka_consumer_poll(kconf.rk, 1000);
         if (rkmessage) {
             msg_consume(rkmessage, NULL);
             rd_kafka_message_destroy(rkmessage);
         }
     }
 
-    err = rd_kafka_consumer_close(rk);
+    err = rd_kafka_consumer_close(kconf.rk);
     if (err) {
-        log_err("%% Failed to close consumer: %s\n",
-                rd_kafka_err2str(err));
+        log_err("%% Failed to close consumer: %s\n", rd_kafka_err2str(err));
     } else {
         log_err("%% Consumer closed\n");
     }
 
     /* Destroy handle */
-    rd_kafka_destroy(rk);
+    rd_kafka_destroy(kconf.rk);
 
     /* Let background threads clean up and terminate cleanly. */
-    run = 5;
-    while (run-- > 0 && rd_kafka_wait_destroyed(1000) == -1)
+    kconf.run = 5;
+    while (kconf.run-- > 0 && rd_kafka_wait_destroyed(1000) == -1) {
         log_info("Waiting for librdkafka to decommission\n");
-    if (run <= 0)
-        rd_kafka_dump(stdout, rk);
+    }
+    if (kconf.run <= 0) {
+        rd_kafka_dump(stdout, kconf.rk);
+    }
 
     return 0;
 }
