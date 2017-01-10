@@ -20,6 +20,7 @@ struct kafkaConf {
     int run;
     int verbosity;
     int skip;
+    int64_t msg_cnt;
 
     char *brokers;
     char *group;

@@ -16,7 +16,6 @@
 
 #include "kafkaConsumer.h"
 
-const static uint64_t msg_count = 100;
 static uint64_t rx_count = 0;
 
 
@@ -100,7 +99,7 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
         log(KLOG_DEBUG, "%.*s\n", (int)rkmessage->len, (char *)rkmessage->payload);
     }
 
-    if (++rx_count == msg_count) {
+    if (++rx_count == kconf.msg_cnt) {
         kconf.run = 0;
     }
 

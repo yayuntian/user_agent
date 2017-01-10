@@ -179,14 +179,20 @@ int main(int argc, char **argv) {
 }
 #endif
 
-
+#ifdef PERF
+uint64_t global_rx_pkts = 0;
+uint64_t global_rx_byts = 0;
+#endif
 
 void payload_callback(rd_kafka_message_t *rkmessage) {
 
     char result[MAX_PAYLOAD_SIZE] = {0,};
     const char *buf = (char *)rkmessage->payload;
     const int buf_len = (int)rkmessage->len;
-
+#ifdef PERF
+    global_rx_pkts++;
+    global_rx_byts += (int)rkmessage->len;
+#endif
     if (buf_len > MAX_PAYLOAD_SIZE) {
         log_err("payload size(%d) exceeds the threshold(%d)\n",
         buf_len, MAX_PAYLOAD_SIZE);
@@ -203,6 +209,7 @@ void payload_callback(rd_kafka_message_t *rkmessage) {
 
 struct kafkaConf kconf = {
     .run = 1,
+    .msg_cnt = -1,
     .verbosity = KLOG_INFO,
     .partition = RD_KAFKA_PARTITION_UA,
     .brokers = "localhost:9092",
@@ -211,7 +218,6 @@ struct kafkaConf kconf = {
     .payload_cb = payload_callback,
     .offset = RD_KAFKA_OFFSET_STORED
 };
-
 
 
 static void usage(const char *argv0) {
@@ -229,6 +235,7 @@ static void usage(const char *argv0) {
             "-s <skip>       Skip process [test]\n"
             "-o <offset>     Offset to start consuming from:\n"
             "                beginning | end | stored\n"
+            "-c <cnt>        Exit after consumering this number (-1)\n"
             "-q              Be quiet\n"
             "-d              Debug mode\n"
             "-h              Show help\n",
@@ -254,6 +261,9 @@ static void argparse (int argc, char **argv) {
                 break;
             case 's':
                 kconf.skip = atoi(optarg);
+                break;
+            case 'c':
+                kconf.msg_cnt = strtoll(optarg, NULL, 10);
                 break;
             case 'q':
                 kconf.verbosity = KLOG_ERR;
@@ -288,7 +298,6 @@ static void argparse (int argc, char **argv) {
     if (!kconf.brokers || !kconf.group || !kconf.topic_count) {
         usage(argv[0]);
     }
-
 }
 
 
@@ -301,8 +310,21 @@ int main(int argc, char **argv) {
     register_enricher("src_ip", ip_enricher);
     register_enricher("dst_ip", ip_enricher);
     register_enricher("user_agent", ua_enricher);
-
+#ifdef PERF
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+#endif
     init_kafka_consumer();
 
+#ifdef PERF
+    gettimeofday(&end, NULL);
+    long time_cost = ((end.tv_sec - start.tv_sec) * 1000000 + \
+            end.tv_usec - start.tv_usec);
+
+    printf("cost time: %ld us, %.2f pps, %.2f bps\n",
+           time_cost,
+           global_rx_pkts / (time_cost * 1.0) * 1000000,
+           global_rx_byts / (time_cost * 1.0) * 1000000);
+#endif
     return 0;
 }

@@ -1,4 +1,5 @@
-FLAGS= -Wall -g -O0 -Werror
+FLAGS = -Wall -g -O0 -Werror
+FLAGS += -DPERF
 CXXFLAGS += -std=c++0x $(FLAGS)
 CFLAGS += -std=c99 -msse4.2 $(FLAGS)
 
