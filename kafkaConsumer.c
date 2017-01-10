@@ -16,8 +16,6 @@
 
 #include "kafkaConsumer.h"
 
-static uint64_t rx_count = 0;
-
 
 static void stop (int sig) {
     if (!kconf.run) {
@@ -98,11 +96,6 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
     } else {
         log(KLOG_DEBUG, "%.*s\n", (int)rkmessage->len, (char *)rkmessage->payload);
     }
-
-    if (++rx_count == kconf.msg_cnt) {
-        kconf.run = 0;
-    }
-
 }
 
 
@@ -110,13 +103,13 @@ static void print_partition_list (const rd_kafka_topic_partition_list_t
         *partitions) {
     int i;
     for (i = 0 ; i < partitions->cnt ; i++) {
-        log(KLOG_INFO, "%s topic: %s[%d] offset %ld",
+        fprintf(stderr, "%s topic: %s[%d] offset %ld",
                 i > 0 ? ",":"",
                 partitions->elems[i].topic,
                 partitions->elems[i].partition,
                 partitions->elems[i].offset);
     }
-    log_err("\n");
+    fprintf(stderr, "\n");
 
 }
 
@@ -142,11 +135,11 @@ static void rebalance_cb (rd_kafka_t *rk,
         rd_kafka_resp_err_t err,
         rd_kafka_topic_partition_list_t *partitions,
         void *opaque) {
-    log(KLOG_INFO, "%% Consumer group rebalanced: ");
+    fprintf(stderr, "%% Consumer group rebalanced - ");
 
     switch (err)  {
         case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-            log(KLOG_INFO, "assigned:\n");
+            fprintf(stderr, "assigned:\n");
 
             set_partition_offset(partitions, kconf.offset);
 
@@ -155,7 +148,7 @@ static void rebalance_cb (rd_kafka_t *rk,
             break;
 
         case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
-            log_err("revoked:\n");
+            fprintf(stderr, "revoked:\n");
             print_partition_list(partitions);
             rd_kafka_assign(rk, NULL);
             break;
@@ -251,7 +244,7 @@ int init_kafka_consumer(void) {
     if (err) {
         log_err("%% Failed to close consumer: %s\n", rd_kafka_err2str(err));
     } else {
-        log(KLOG_INFO, "%% Consumer closed\n");
+        fprintf(stderr, "%% Consumer closed\n");
     }
 
     /* Destroy handle */

@@ -58,6 +58,7 @@ static char *buf_http = "{\n"
 #endif
 
 FILE *fp = NULL;
+static uint64_t rx_count = 0;
 
 size_t write_data_log(const char *data, size_t length) {
 
@@ -184,10 +185,10 @@ void echo_perf() {
             kconf.end.tv_usec - kconf.start.tv_usec);
 
     fprintf(stderr, "# const time: %ld, rx cnt: %ld, byt: %ld\n",
-            time_cost, kconf.rx_cnt, kconf.rx_byt);
+            time_cost, kconf.msg_cnt, kconf.rx_byt);
 
     fprintf(stderr, "# %.2f pps, %.2f MBps\n",
-            kconf.rx_cnt / (time_cost * 1.0) * 1000000,
+            kconf.msg_cnt / (time_cost * 1.0) * 1000000,
             kconf.rx_byt / (time_cost * 1.0 * 1024 * 1024) * 1000000);
 }
 #endif
@@ -201,16 +202,17 @@ void payload_callback(rd_kafka_message_t *rkmessage) {
 
 #ifdef PERF
     kconf.rx_byt += (int)rkmessage->len;
-    if (kconf.rx_cnt++ == 0) {
+    if (rx_count == 0) {
         gettimeofday(&kconf.start, NULL);
     }
-
-    if (kconf.rx_cnt == 1200000) {
+#endif
+    if (++rx_count == kconf.msg_cnt) {
+#ifdef PERF
         gettimeofday(&kconf.end, NULL);
         echo_perf();
+#endif
         kconf.run = 0;
     }
-#endif
 
     if (buf_len > MAX_PAYLOAD_SIZE) {
         log_err("payload size(%d) exceeds the threshold(%d)\n",
@@ -218,8 +220,6 @@ void payload_callback(rd_kafka_message_t *rkmessage) {
         write_data_log(buf, buf_len);
         return;
     }
-
-//    printf("partition: %d, offset: %ld\n", rkmessage->partition, rkmessage->offset);
 
     extract(buf, buf + buf_len);
     combine_enrichee(buf, result);
@@ -238,7 +238,6 @@ struct kafkaConf kconf = {
     .topic_count = 0,
 #ifdef PERF
     .rx_byt = 0,
-    .rx_cnt = 0,
 #endif
     .payload_cb = payload_callback,
     .offset = RD_KAFKA_OFFSET_STORED
@@ -277,7 +276,7 @@ static void usage(const char *argv0) {
 static void argparse (int argc, char **argv) {
     int i, opt;
 
-    while ((opt = getopt(argc, argv, "g:b:s:o:qdh")) != -1) {
+    while ((opt = getopt(argc, argv, "g:b:s:o:c:qdh")) != -1) {
         switch (opt) {
             case 'b':
                 kconf.brokers = optarg;
@@ -328,6 +327,8 @@ static void argparse (int argc, char **argv) {
 
 
 int main(int argc, char **argv) {
+
+    fprintf(stderr, "%% Offset Info: beginning[-2], stored[-1000], end[-1]\n");
     argparse(argc, argv);
 
     init();
