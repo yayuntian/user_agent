@@ -19,14 +19,14 @@
 const static uint64_t msg_count = 10;
 static uint64_t rx_count = 0;
 
-RD_UNUSED struct kafkaConf kconf = {
-    .run = 1,
-    .partition = RD_KAFKA_PARTITION_UA,
-    .brokers = "10.161.166.192:8301",
-    .group = "rdkafka_consumer_mafia",
-    .topic = "cloudsensor",     // now only one, fix it
-    .topic_count = 1
-};
+//struct kafkaConf kconf = {
+//    .run = 1,
+//    .partition = RD_KAFKA_PARTITION_UA,
+//    .brokers = "10.161.166.192:8301",
+//    .group = "rdkafka_consumer_mafia",
+//    .topic = "cloudsensor",     // now only one, fix it
+//    .topic_count = 1
+//};
 
 
 static void stop (int sig) {

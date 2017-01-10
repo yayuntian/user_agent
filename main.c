@@ -111,22 +111,9 @@ int ua_enricher(struct enrichee *enrichee__) {
 }
 
 
-int main(int argc, char **argv) {
-    init();
 
-    ipwrapper_init();
-
-    register_enricher("src_ip", ip_enricher);
-    register_enricher("dst_ip", ip_enricher);
-    register_enricher("user_agent", ua_enricher);
-
-
-    extract(buf_http, buf_http + strlen(buf_http));
-
+void combine_enrichee(const char *buf, char *result) {
     int i;
-    char result[8192] = {0,};
-
-
     int offset_buf = 0;
     int offset_result = 0;
 
@@ -139,26 +126,44 @@ int main(int argc, char **argv) {
         }
 
         // copy before i clean buf
-        next_clean_ptr = buf_http + offset_buf;
-        next_clean_len = enrichees[i].orig_value - (buf_http + offset_buf);
+        next_clean_ptr = buf + offset_buf;
+        next_clean_len = enrichees[i].orig_value - (buf + offset_buf);
 
         strncpy(result + offset_result, next_clean_ptr, next_clean_len);
 
         offset_buf += next_clean_len + enrichees[i].orig_value_len;
         offset_result += next_clean_len;
 
-
         // copy i fix
         strncpy(result + offset_result, enrichees[i].enriched_value, enrichees[i].enriched_value_len);
         offset_result += enrichees[i].enriched_value_len;
     }
 
-    next_clean_ptr = buf_http + offset_buf;
-    if (offset_buf < strlen(buf_http)) {
-        next_clean_len = strlen(buf_http) - offset_buf;
+    next_clean_ptr = buf + offset_buf;
+    if (offset_buf < strlen(buf)) {
+        next_clean_len = strlen(buf) - offset_buf;
         strncpy(result + offset_result, next_clean_ptr, next_clean_len);
     }
+}
 
-    printf("###################\n%s\n", result);
+
+int main(int argc, char **argv) {
+
+    char result[8192];
+
+    init();
+    ipwrapper_init();
+
+    register_enricher("src_ip", ip_enricher);
+    register_enricher("dst_ip", ip_enricher);
+    register_enricher("user_agent", ua_enricher);
+
+    extract(buf_http, buf_http + strlen(buf_http));
+
+    memset(result, 0, 8192);
+    combine_enrichee(buf_http, result);
+
+    printf("%s\n", result);
+
     return 0;
 }
