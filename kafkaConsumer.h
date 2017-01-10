@@ -7,13 +7,17 @@
 
 #include "rdkafka.h"
 
-#define log_err(fmt, args...)   fprintf(stderr, fmt, ##args)
-#define log_info(fmt, args...)  printf(fmt, ##args)
+
+#define KLOG_ERR 1
+#define KLOG_WAR 2
+#define KLOG_INFO 3
+#define KLOG_DEBUG 4
 
 typedef void (*kafka_payload_cb)(rd_kafka_message_t *rkmessage);
 
 struct kafkaConf {
     int run;
+    int verbosity;
 
     char *brokers;
     char *group;
@@ -34,5 +38,14 @@ struct kafkaConf {
 extern struct kafkaConf kconf;
 
 int init_kafka_consumer(void);
+
+
+#define log_err(fmt, args...)   fprintf(stderr, "%s: " fmt, __func__, ##args)
+#define log(VER, fmt, args...)  \
+do {    \
+    if (kconf.verbosity >= (VER)) {  \
+        printf(fmt, ##args);    \
+    }   \
+}while (0);
 
 #endif //MAFIA_KAFKACONSUMER_H

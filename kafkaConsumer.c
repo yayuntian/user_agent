@@ -35,7 +35,7 @@ static void logger (const rd_kafka_t *rk, int level,
                     const char *fac, const char *buf) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    log_info("%u.%03u RDKAFKA-%i-%s: %s: %s\n",
+    log(KLOG_INFO, "%u.%03u RDKAFKA-%i-%s: %s: %s\n",
             (int)tv.tv_sec, (int)(tv.tv_usec / 1000),
             level, fac, rd_kafka_name(rk), buf);
 }
@@ -55,7 +55,7 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
 
     if (rkmessage->err) {
         if (rkmessage->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
-            log_err("%% Consumer reached end of %s [%d] "
+            log(KLOG_WAR, "%% Consumer reached end of %s [%d] "
                             "message queue at offset %ld\n",
                     rd_kafka_topic_name(rkmessage->rkt),
                     rkmessage->partition, rkmessage->offset);
@@ -84,20 +84,20 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
         return;
     }
 
-    log_err("%% Message (topic %s [%d], "
+    log(KLOG_DEBUG, "%% Message (topic %s [%d], "
                     "offset %ld, %zd bytes):\n",
             rd_kafka_topic_name(rkmessage->rkt),
             rkmessage->partition,
             rkmessage->offset, rkmessage->len);
 
     if (rkmessage->key_len) {
-        log_info("Key: %.*s\n", (int)rkmessage->key_len, (char *)rkmessage->key);
+        log(KLOG_DEBUG, "Key: %.*s\n", (int)rkmessage->key_len, (char *)rkmessage->key);
     }
 
     if (kconf.payload_cb) {
         kconf.payload_cb(rkmessage);
     } else {
-        log_info("%.*s\n", (int)rkmessage->len, (char *)rkmessage->payload);
+        log(KLOG_DEBUG, "%.*s\n", (int)rkmessage->len, (char *)rkmessage->payload);
     }
 
     if (++rx_count == msg_count) {
@@ -111,7 +111,7 @@ static void print_partition_list (const rd_kafka_topic_partition_list_t
                                   *partitions) {
     int i;
     for (i = 0 ; i < partitions->cnt ; i++) {
-        log_err("%s topic: %s[%d] offset %ld",
+        log(KLOG_INFO, "%s topic: %s[%d] offset %ld",
                 i > 0 ? ",":"",
                 partitions->elems[i].topic,
                 partitions->elems[i].partition,
@@ -143,11 +143,11 @@ static void rebalance_cb (rd_kafka_t *rk,
                           rd_kafka_resp_err_t err,
                           rd_kafka_topic_partition_list_t *partitions,
                           void *opaque) {
-    log_err("%% Consumer group rebalanced: ");
+    log(KLOG_INFO, "%% Consumer group rebalanced: ");
 
     switch (err)  {
         case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-            log_err("assigned:\n");
+            log(KLOG_INFO, "assigned:\n");
 
             set_partition_offset(partitions, RD_KAFKA_OFFSET_STORED);
 
@@ -226,7 +226,7 @@ int init_kafka_consumer(void) {
     kconf.rktp = rd_kafka_topic_partition_list_new(kconf.topic_count);
     rd_kafka_topic_partition_list_add(kconf.rktp, kconf.topic, kconf.partition);
 
-    log_err("%% Subscribing to %d topics\n", kconf.rktp->cnt);
+    log(KLOG_INFO, "%% Subscribing to %d topics\n", kconf.rktp->cnt);
 
     if ((err = rd_kafka_subscribe(kconf.rk, kconf.rktp))) {
         log_err("%% Failed to start consuming topics: %s\n",
@@ -249,7 +249,7 @@ int init_kafka_consumer(void) {
     if (err) {
         log_err("%% Failed to close consumer: %s\n", rd_kafka_err2str(err));
     } else {
-        log_err("%% Consumer closed\n");
+        log(KLOG_INFO, "%% Consumer closed\n");
     }
 
     /* Destroy handle */
@@ -258,7 +258,7 @@ int init_kafka_consumer(void) {
     /* Let background threads clean up and terminate cleanly. */
     kconf.run = 5;
     while (kconf.run-- > 0 && rd_kafka_wait_destroyed(1000) == -1) {
-        log_info("Waiting for librdkafka to decommission\n");
+        log(KLOG_INFO, "Waiting for librdkafka to decommission\n");
     }
     if (kconf.run <= 0) {
         rd_kafka_dump(stdout, kconf.rk);

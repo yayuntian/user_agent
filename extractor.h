@@ -37,8 +37,6 @@ struct interested_pair {
 };
 
 
-
-
 extern struct enrichee enrichees[MAX_ENRICHEE];
 
 

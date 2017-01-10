@@ -62,7 +62,7 @@ size_t write_data_log(const char *data, size_t length) {
 
     if (!fp) {
         if ((fp = fopen(filename, "wb")) == NULL) {
-            fprintf(stderr, "open file error: %s\n", filename);
+            log_err("open file error: %s\n", filename);
             return 0;
         }
     }
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
     memset(result, 0, MAX_PAYLOAD_SIZE);
     combine_enrichee(buf_http, result);
 
-    printf("%s\n", result);
+    log(KLOG_DEBUG, "%s\n", result);
 
     return 0;
 }
@@ -184,7 +184,7 @@ void payload_callback(rd_kafka_message_t *rkmessage) {
     const int buf_len = (int)rkmessage->len;
 
     if (buf_len > MAX_PAYLOAD_SIZE) {
-        fprintf(stderr, "payload size(%d) exceeds the threshold(%d)\n",
+        log_err("payload size(%d) exceeds the threshold(%d)\n",
         buf_len, MAX_PAYLOAD_SIZE);
         write_data_log(buf, buf_len);
         return;
@@ -193,12 +193,13 @@ void payload_callback(rd_kafka_message_t *rkmessage) {
     extract(buf, buf + buf_len);
     combine_enrichee(buf, result);
 
-    printf("%s\n", result);
+    log(KLOG_DEBUG, "%s\n", result);
     write_data_log(result, strlen(result));
 }
 
 struct kafkaConf kconf = {
     .run = 1,
+    .verbosity = KLOG_INFO,
     .partition = RD_KAFKA_PARTITION_UA,
     .brokers = "10.161.166.192:8301",
     .group = "rdkafka_consumer_mafia",
