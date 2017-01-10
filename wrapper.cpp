@@ -6,9 +6,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
 
-#include "IPWrapper.h"
-#include "IPLocator.h"
-
+#include "wrapper.h"
+#include "ipLocator.h"
 #include "userAgent.h"
 
 using namespace boost::algorithm;

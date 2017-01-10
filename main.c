@@ -4,7 +4,7 @@
 #include <sys/time.h>
 
 #include "extractor.h"
-#include "IPWrapper.h"
+#include "wrapper.h"
 #include "kafkaConsumer.h"
 
 

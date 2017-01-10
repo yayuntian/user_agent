@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "extractor.h"
 
 static struct interested_pair interested_pairs[MAX_INTERESTED_PAIRS];
@@ -32,13 +33,13 @@ int register_enricher(const char *interested_name, enricher enricher__) {
 
 // 当找到感兴趣的字符后返回，或者整个字符串都查找完没有发现感兴趣的字符
 int find_delimiter_sse42(const char *str2scan, const char *delimiters,
-                         size_t set_size, int *found) {
+        size_t set_size, int *found) {
     *found = 0;
 
     __m128i __m_delimiters = _mm_loadu_si128((const __m128i *) delimiters);
     __m128i __m_str2scan = _mm_loadu_si128((void *) str2scan);
     int r = _mm_cmpestri(__m_delimiters, set_size, __m_str2scan, 16,
-                         _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_LEAST_SIGNIFICANT);
+            _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_LEAST_SIGNIFICANT);
     if (likely(r != 16)) {
         *found = 1;
     }
@@ -47,13 +48,13 @@ int find_delimiter_sse42(const char *str2scan, const char *delimiters,
 }
 
 int is_pair_interested(const char *string_start, int string_len,
-                       struct interested_pair **interested) {
+        struct interested_pair **interested) {
     int is_interested = 0;
 
     for (int i = 0; i < num_interested_pairs; i++) {
         /* 先比一下字符串长度，可以节省一些CPU开销 */
         if ((interested_pairs[i].name_len == string_len) &&
-            (0 == strncmp(interested_pairs[i].name, string_start + 1, string_len))) {
+                (0 == strncmp(interested_pairs[i].name, string_start + 1, string_len))) {
             *interested = &interested_pairs[i];
             is_interested = 1;
             //printf("Found interested name: %.*s\n", string_len, string_start + 1);
@@ -95,7 +96,7 @@ int extract(const char *buf, const char *buf_end) {
             }
         } else {
             if ((*pos != '\"') && (*pos != ',') && (*pos != ':')
-                && (*pos != '{') && (*pos != '}')) {
+                    && (*pos != '{') && (*pos != '}')) {
                 pos++;
                 continue;
             }
@@ -133,9 +134,9 @@ int extract(const char *buf, const char *buf_end) {
                                 // 去掉前后空白字符。注意这里可能不是string，所以不能去找双引号。
                                 for (int i = 1;; i++) {
                                     if (('\t' == *(prev_delimiter + i))
-                                        || ('\n' == *(prev_delimiter + i))
-                                        || ('\r' == *(prev_delimiter + i))
-                                        || (' ' == *(prev_delimiter + i))) {
+                                            || ('\n' == *(prev_delimiter + i))
+                                            || ('\r' == *(prev_delimiter + i))
+                                            || (' ' == *(prev_delimiter + i))) {
                                         prefix_space++;
                                     } else {
                                         break;
@@ -143,7 +144,7 @@ int extract(const char *buf, const char *buf_end) {
                                 }
                                 for (int i = 1;; i++) {
                                     if (('\t' == *(pos - i)) || ('\n' == *(pos - i))
-                                        || ('\r' == *(pos - i)) || (' ' == *(pos - i))) {
+                                            || ('\r' == *(pos - i)) || (' ' == *(pos - i))) {
                                         suffix_space++;
                                     } else {
                                         break;
@@ -152,7 +153,7 @@ int extract(const char *buf, const char *buf_end) {
                                 enrichees[num_enrichees].use = 1;
                                 enrichees[num_enrichees].orig_value = prev_delimiter + prefix_space + 1;
                                 enrichees[num_enrichees].orig_value_len =
-                                        pos - suffix_space - enrichees[num_enrichees].orig_value;
+                                    pos - suffix_space - enrichees[num_enrichees].orig_value;
                                 //printf("The value is: %.*s\n", enrichees[num_enrichees].orig_value_len,
                                 // enrichees[num_enrichees].orig_value);
                                 interested->enricher__(&enrichees[num_enrichees]);
@@ -187,4 +188,3 @@ int extract(const char *buf, const char *buf_end) {
     }
     return 0;
 }
-

@@ -294,7 +294,7 @@ OSInfo getOSInfo(UserAgent& p) {
     version = replace_all_copy(version, "_", ".");
 
     return OSInfo {
-            .FUllName = p.os,
+        .FUllName = p.os,
             .Name = name,
             .Version = version
     };

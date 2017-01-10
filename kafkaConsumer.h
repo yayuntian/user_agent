@@ -42,10 +42,10 @@ int init_kafka_consumer(void);
 
 #define log_err(fmt, args...)   fprintf(stderr, "%s: " fmt, __func__, ##args)
 #define log(VER, fmt, args...)  \
-do {    \
-    if (kconf.verbosity >= (VER)) {  \
-        printf(fmt, ##args);    \
-    }   \
-}while (0);
+    do {    \
+        if (kconf.verbosity >= (VER)) {  \
+            printf(fmt, ##args);    \
+        }   \
+    }while (0);
 
 #endif //MAFIA_KAFKACONSUMER_H

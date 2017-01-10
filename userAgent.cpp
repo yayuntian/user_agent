@@ -120,7 +120,7 @@ void Parse(UserAgent& p, string ua) {
         if (!p.mobile && s.name == "Mobile") {
             p.mobile = true;
         }
-//        sections.push_back(s);
+        //        sections.push_back(s);
         sections[count++] = s;
     }
 
@@ -164,7 +164,7 @@ void echo_ua(UserAgent& p) {
 #if 0
 int test_ua_performance(int argc, char **argv) {
     string ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-            " (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.10240";
+        " (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.10240";
     if (argc < 2) {
         printf("Usage: %s  <loop-count>\n", argv[0]);
         exit(0);

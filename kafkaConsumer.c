@@ -32,7 +32,7 @@ static void stop (int sig) {
  * Kafka logger callback (optional)
  */
 static void logger (const rd_kafka_t *rk, int level,
-                    const char *fac, const char *buf) {
+        const char *fac, const char *buf) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     log(KLOG_INFO, "%u.%03u RDKAFKA-%i-%s: %s: %s\n",
@@ -48,7 +48,7 @@ static void logger (const rd_kafka_t *rk, int level,
  * the `rkmessage->err` field for this purpose.
  */
 static void msg_consume (rd_kafka_message_t *rkmessage,
-                         void *opaque) {
+        void *opaque) {
     if (kconf.run == 0) {
         return;
     }
@@ -56,7 +56,7 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
     if (rkmessage->err) {
         if (rkmessage->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
             log(KLOG_WAR, "%% Consumer reached end of %s [%d] "
-                            "message queue at offset %ld\n",
+                    "message queue at offset %ld\n",
                     rd_kafka_topic_name(rkmessage->rkt),
                     rkmessage->partition, rkmessage->offset);
             return;
@@ -64,20 +64,20 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
 
         if (rkmessage->rkt) {
             log_err("%% Consume error for "
-                            "topic \"%s\" [%d] "
-                            "offset %ld: %s\n",
+                    "topic \"%s\" [%d] "
+                    "offset %ld: %s\n",
                     rd_kafka_topic_name(rkmessage->rkt),
                     rkmessage->partition,
                     rkmessage->offset,
                     rd_kafka_message_errstr(rkmessage));
         } else {
             log_err("%% Consumer error: %s: %s\n",
-                rd_kafka_err2str(rkmessage->err),
-                rd_kafka_message_errstr(rkmessage));
+                    rd_kafka_err2str(rkmessage->err),
+                    rd_kafka_message_errstr(rkmessage));
         }
 
         if (rkmessage->err == RD_KAFKA_RESP_ERR__UNKNOWN_PARTITION ||
-            rkmessage->err == RD_KAFKA_RESP_ERR__UNKNOWN_TOPIC) {
+                rkmessage->err == RD_KAFKA_RESP_ERR__UNKNOWN_TOPIC) {
             kconf.run = 0;
         }
 
@@ -85,7 +85,7 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
     }
 
     log(KLOG_DEBUG, "%% Message (topic %s [%d], "
-                    "offset %ld, %zd bytes):\n",
+            "offset %ld, %zd bytes):\n",
             rd_kafka_topic_name(rkmessage->rkt),
             rkmessage->partition,
             rkmessage->offset, rkmessage->len);
@@ -108,7 +108,7 @@ static void msg_consume (rd_kafka_message_t *rkmessage,
 
 
 static void print_partition_list (const rd_kafka_topic_partition_list_t
-                                  *partitions) {
+        *partitions) {
     int i;
     for (i = 0 ; i < partitions->cnt ; i++) {
         log(KLOG_INFO, "%s topic: %s[%d] offset %ld",
@@ -123,7 +123,7 @@ static void print_partition_list (const rd_kafka_topic_partition_list_t
 
 
 static RD_UNUSED void set_partition_offset (rd_kafka_topic_partition_list_t
-                                  *partitions, const int64_t offset) {
+        *partitions, const int64_t offset) {
     int i;
     for (i = 0 ; i < partitions->cnt ; i++) {
         rd_kafka_topic_partition_t *part;
@@ -133,16 +133,16 @@ static RD_UNUSED void set_partition_offset (rd_kafka_topic_partition_list_t
             part->offset = offset;
         } else {
             log_err("set partition offset error: %s[%d] offset:%ld\n",
-            topic, partition, offset);
+                    topic, partition, offset);
         }
     }
 }
 
 
 static void rebalance_cb (rd_kafka_t *rk,
-                          rd_kafka_resp_err_t err,
-                          rd_kafka_topic_partition_list_t *partitions,
-                          void *opaque) {
+        rd_kafka_resp_err_t err,
+        rd_kafka_topic_partition_list_t *partitions,
+        void *opaque) {
     log(KLOG_INFO, "%% Consumer group rebalanced: ");
 
     switch (err)  {
@@ -192,8 +192,8 @@ int init_kafka_consumer(void) {
 
     /* Consumer groups require a group id */
     if (rd_kafka_conf_set(kconf.rk_conf, "group.id", kconf.group,
-                          errstr, sizeof(errstr)) !=
-        RD_KAFKA_CONF_OK) {
+                errstr, sizeof(errstr)) !=
+            RD_KAFKA_CONF_OK) {
         log_err("%% %s\n", errstr);
         exit(1);
     }
@@ -206,7 +206,7 @@ int init_kafka_consumer(void) {
 
     /* Create Kafka handle */
     if (!(kconf.rk = rd_kafka_new(RD_KAFKA_CONSUMER, kconf.rk_conf,
-                            errstr, sizeof(errstr)))) {
+                    errstr, sizeof(errstr)))) {
         log_err("%% Failed to create new consumer: %s\n", errstr);
         exit(1);
     }
