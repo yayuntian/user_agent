@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <getopt.h>
 #include <errno.h>
-#include <sys/time.h>
 
 #include "extractor.h"
 #include "wrapper.h"
@@ -180,25 +179,47 @@ int main(int argc, char **argv) {
 #endif
 
 #ifdef PERF
-uint64_t global_rx_pkts = 0;
-uint64_t global_rx_byts = 0;
+void echo_perf() {
+    long time_cost = ((kconf.end.tv_sec - kconf.start.tv_sec) * 1000000 + \
+            kconf.end.tv_usec - kconf.start.tv_usec);
+
+    fprintf(stderr, "# const time: %ld, rx cnt: %ld, byt: %ld\n",
+            time_cost, kconf.rx_cnt, kconf.rx_byt);
+
+    fprintf(stderr, "# %.2f pps, %.2f MBps\n",
+            kconf.rx_cnt / (time_cost * 1.0) * 1000000,
+            kconf.rx_byt / (time_cost * 1.0 * 1024 * 1024) * 1000000);
+}
 #endif
+
 
 void payload_callback(rd_kafka_message_t *rkmessage) {
 
     char result[MAX_PAYLOAD_SIZE] = {0,};
     const char *buf = (char *)rkmessage->payload;
     const int buf_len = (int)rkmessage->len;
+
 #ifdef PERF
-    global_rx_pkts++;
-    global_rx_byts += (int)rkmessage->len;
+    kconf.rx_byt += (int)rkmessage->len;
+    if (kconf.rx_cnt++ == 0) {
+        gettimeofday(&kconf.start, NULL);
+    }
+
+    if (kconf.rx_cnt == 1200000) {
+        gettimeofday(&kconf.end, NULL);
+        echo_perf();
+        kconf.run = 0;
+    }
 #endif
+
     if (buf_len > MAX_PAYLOAD_SIZE) {
         log_err("payload size(%d) exceeds the threshold(%d)\n",
         buf_len, MAX_PAYLOAD_SIZE);
         write_data_log(buf, buf_len);
         return;
     }
+
+//    printf("partition: %d, offset: %ld\n", rkmessage->partition, rkmessage->offset);
 
     extract(buf, buf + buf_len);
     combine_enrichee(buf, result);
@@ -215,6 +236,10 @@ struct kafkaConf kconf = {
     .brokers = "localhost:9092",
     .group = "rdkafka_consumer_mafia",
     .topic_count = 0,
+#ifdef PERF
+    .rx_byt = 0,
+    .rx_cnt = 0,
+#endif
     .payload_cb = payload_callback,
     .offset = RD_KAFKA_OFFSET_STORED
 };
@@ -230,15 +255,16 @@ static void usage(const char *argv0) {
     printf("Usage: %s <options> [topic1 topic2 ...]\n", argv0);
 
     printf("General options:\n"
-            "-g <group>      Consumer group (%s)\n"
-            "-b <brokes>     Broker address (%s)\n"
-            "-s <skip>       Skip process [test]\n"
-            "-o <offset>     Offset to start consuming from:\n"
-            "                beginning | end | stored\n"
-            "-c <cnt>        Exit after consumering this number (-1)\n"
-            "-q              Be quiet\n"
-            "-d              Debug mode\n"
-            "-h              Show help\n",
+            " -g <group>      Consumer group (%s)\n"
+            " -b <brokes>     Broker address (%s)\n"
+            " -s <skip>       Skip process [test]\n"
+            " -o <offset>     Offset to start consuming from:\n"
+            "                 beginning | end | stored\n"
+            " -c <cnt>        Exit after consumering this number (-1)\n"
+            " -q              Be quiet\n"
+            " -e              Exit consumer when last message\n"
+            " -d              Debug mode\n"
+            " -h              Show help\n",
     kconf.group, kconf.brokers);
 
     exit(1);
@@ -309,22 +335,9 @@ int main(int argc, char **argv) {
 
     register_enricher("src_ip", ip_enricher);
     register_enricher("dst_ip", ip_enricher);
-    register_enricher("user_agent", ua_enricher);
-#ifdef PERF
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
-#endif
+    //register_enricher("user_agent", ua_enricher);
+
     init_kafka_consumer();
 
-#ifdef PERF
-    gettimeofday(&end, NULL);
-    long time_cost = ((end.tv_sec - start.tv_sec) * 1000000 + \
-            end.tv_usec - start.tv_usec);
-
-    printf("cost time: %ld us, %.2f pps, %.2f bps\n",
-           time_cost,
-           global_rx_pkts / (time_cost * 1.0) * 1000000,
-           global_rx_byts / (time_cost * 1.0) * 1000000);
-#endif
     return 0;
 }

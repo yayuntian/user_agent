@@ -184,6 +184,7 @@ uint32_t IPSearch::ipToLong(const char * ip, uint32_t &prefix)
     char ips[3];
     memset(ips, '\0', 3);
 
+    a = b = c = d = 0;
     int ipsCnt = 0;
     for (int i = 0; i < iLen; i++)
     {

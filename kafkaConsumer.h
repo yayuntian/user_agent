@@ -5,6 +5,8 @@
 #ifndef MAFIA_KAFKACONSUMER_H
 #define MAFIA_KAFKACONSUMER_H
 
+#include <sys/time.h>
+
 #include "rdkafka.h"
 
 #define MAX_TOPIC 16
@@ -22,6 +24,7 @@ struct kafkaConf {
     int skip;
     int64_t msg_cnt;
 
+
     char *brokers;
     char *group;
     char *topic[MAX_TOPIC];
@@ -36,6 +39,11 @@ struct kafkaConf {
     rd_kafka_topic_partition_list_t *rktp;
 
     kafka_payload_cb payload_cb;
+#ifdef PERF
+    struct timeval start, end;
+    uint64_t rx_cnt;
+    uint64_t rx_byt;
+#endif
 };
 
 extern struct kafkaConf kconf;
