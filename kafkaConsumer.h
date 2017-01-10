@@ -7,6 +7,7 @@
 
 #include "rdkafka.h"
 
+#define MAX_TOPIC 16
 
 #define KLOG_ERR 1
 #define KLOG_WAR 2
@@ -18,10 +19,11 @@ typedef void (*kafka_payload_cb)(rd_kafka_message_t *rkmessage);
 struct kafkaConf {
     int run;
     int verbosity;
+    int skip;
 
     char *brokers;
     char *group;
-    char *topic;
+    char *topic[MAX_TOPIC];
     int32_t topic_count;
     int32_t partition;
     int64_t offset;

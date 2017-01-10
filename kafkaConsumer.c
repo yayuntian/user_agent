@@ -149,7 +149,7 @@ static void rebalance_cb (rd_kafka_t *rk,
         case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
             log(KLOG_INFO, "assigned:\n");
 
-            set_partition_offset(partitions, RD_KAFKA_OFFSET_STORED);
+            set_partition_offset(partitions, kconf.offset);
 
             print_partition_list(partitions);
             rd_kafka_assign(rk, partitions);
@@ -171,6 +171,7 @@ static void rebalance_cb (rd_kafka_t *rk,
 
 //int main (int argc, char **argv) {
 int init_kafka_consumer(void) {
+    int i;
     char tmp[16];
     char errstr[512];
     rd_kafka_resp_err_t err;
@@ -224,7 +225,9 @@ int init_kafka_consumer(void) {
 
     // TODO: just support one topic, fix it according to the parameter
     kconf.rktp = rd_kafka_topic_partition_list_new(kconf.topic_count);
-    rd_kafka_topic_partition_list_add(kconf.rktp, kconf.topic, kconf.partition);
+    for (i = 0; i < kconf.topic_count; i++) {
+        rd_kafka_topic_partition_list_add(kconf.rktp, kconf.topic[i], kconf.partition);
+    }
 
     log(KLOG_INFO, "%% Subscribing to %d topics\n", kconf.rktp->cnt);
 

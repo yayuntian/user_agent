@@ -1,6 +1,10 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <stdint.h>
+#include <getopt.h>
+#include <errno.h>
 #include <sys/time.h>
 
 #include "extractor.h"
@@ -201,15 +205,95 @@ struct kafkaConf kconf = {
     .run = 1,
     .verbosity = KLOG_INFO,
     .partition = RD_KAFKA_PARTITION_UA,
-    .brokers = "10.161.166.192:8301",
+    .brokers = "localhost:9092",
     .group = "rdkafka_consumer_mafia",
-    .topic = "cloudsensor",     // now only one, fix it
-    .topic_count = 1,
-    .payload_cb = payload_callback
+    .topic_count = 0,
+    .payload_cb = payload_callback,
+    .offset = RD_KAFKA_OFFSET_STORED
 };
 
 
+
+static void usage(const char *argv0) {
+
+    printf("mafia - ClearClouds Message Tool\n"
+    "Copyright (c) 2011-2017 WuXi Juyun System, Ltd.\n"
+            "Version: 0.1beta\n"
+            "\n");
+
+    printf("Usage: %s <options> [topic1 topic2 ...]\n", argv0);
+
+    printf("General options:\n"
+            "-g <group>      Consumer group (%s)\n"
+            "-b <brokes>     Broker address (%s)\n"
+            "-s <skip>       Skip process [test]\n"
+            "-o <offset>     Offset to start consuming from:\n"
+            "                beginning | end | stored\n"
+            "-q              Be quiet\n"
+            "-d              Debug mode\n"
+            "-h              Show help\n",
+    kconf.group, kconf.brokers);
+
+    exit(1);
+}
+
+
+/**
+ * Parse command line arguments
+ */
+static void argparse (int argc, char **argv) {
+    int i, opt;
+
+    while ((opt = getopt(argc, argv, "g:b:s:o:qdh")) != -1) {
+        switch (opt) {
+            case 'b':
+                kconf.brokers = optarg;
+                break;
+            case 'g':
+                kconf.group = optarg;
+                break;
+            case 's':
+                kconf.skip = atoi(optarg);
+                break;
+            case 'q':
+                kconf.verbosity = KLOG_ERR;
+                break;
+            case 'd':
+                kconf.verbosity = KLOG_DEBUG;
+                break;
+            case 'o':
+                if (!strcmp(optarg, "end"))
+                    kconf.offset = RD_KAFKA_OFFSET_END;
+                else if (!strcmp(optarg, "beginning"))
+                    kconf.offset = RD_KAFKA_OFFSET_BEGINNING;
+                else if (!strcmp(optarg, "stored"))
+                    kconf.offset = RD_KAFKA_OFFSET_STORED;
+                else {
+                    kconf.offset = strtoll(optarg, NULL, 10);
+                    if (kconf.offset < 0)
+                        kconf.offset = RD_KAFKA_OFFSET_TAIL(-kconf.offset);
+                }
+                break;
+            default:
+                usage(argv[0]);
+                break;
+        }
+    }
+
+    kconf.topic_count = argc - optind;
+    for (i = 0; i < kconf.topic_count; i++) {
+        kconf.topic[i] = argv[optind + i];
+    }
+
+    if (!kconf.brokers || !kconf.group || !kconf.topic_count) {
+        usage(argv[0]);
+    }
+
+}
+
+
 int main(int argc, char **argv) {
+    argparse(argc, argv);
 
     init();
     ipwrapper_init();
