@@ -54,3 +54,36 @@ public:
 	uint32_t start;
 	uint32_t end;
 };
+
+/*
+ *  亚洲|中国|江苏|无锡||电信|320200|China|CN|120.301663|31.574729
+ *   0    1    2  3  4  5     6     7    8     9        10
+ */
+
+class IPInfo {
+public:
+    string continent;
+    string country;
+    string province;
+    string city ;
+    string district;
+    string isp;
+    string zipcode;
+    string ecountry;
+    string shortcode;
+    string longitude;
+    string latitude;
+};
+
+//    ipInfo.continent = v[0];
+//    ipInfo.country = v[1];
+//    ipInfo.province = v[2];
+//    ipInfo.district = v[4];
+//    ipInfo.zipcode = v[6];
+//    ipInfo.ecountry = v[7];
+//    ipInfo.shortcode = v[8];
+
+//    ipInfo.city = v[3];
+//    ipInfo.isp = v[5];
+//    ipInfo.longitude = v[9];
+//    ipInfo.latitude = v[10];

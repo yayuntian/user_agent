@@ -10,9 +10,8 @@ extern "C"
 {
 #endif
 
-
 void ipwrapper_init();
-const char* ipwrapper_query(const char *ip);
+char* ipwrapper_query(const char *ip);
 
 
 #ifdef __cplusplus

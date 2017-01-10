@@ -22,7 +22,7 @@ $(TARGET): $(OBJS)
 
 JSON_OBJS = main.o extractor.o IPLocator.o IPWrapper.o
 json: $(JSON_OBJS)
-	$(CXX) -o $@ $(JSON_OBJS)
+	$(CXX) -o $@ $(JSON_OBJS) $(CXXLIBS) $(KAFKA_LIBS)
 
 .PHONY: clean
 clean:
