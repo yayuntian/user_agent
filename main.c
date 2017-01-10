@@ -7,6 +7,7 @@
 #include "IPWrapper.h"
 #include "kafkaConsumer.h"
 
+
 #ifdef TEST_JSON
 static char *buf_http = "{\n"
         "    \"src_ip\": 5689875,\n"
@@ -73,11 +74,10 @@ size_t write_data_log(const char *data, size_t length) {
 
 
 int ip_enricher(struct enrichee *enrichee__) {
-    char str[256] = {0,};
+    char value[MAX_ORIG_NAME_LEN] = {0,};
 
-    strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
-    char *output = ip2JsonStr(str);
-//    printf("[%ld]%s\n", strlen(output), output);
+    strncpy(value, enrichee__->orig_value, enrichee__->orig_value_len);
+    char *output = ip2JsonStr(value);
 
     if (!output) {
         enrichee__->orig_value_len = 0;
@@ -94,11 +94,10 @@ int ip_enricher(struct enrichee *enrichee__) {
 }
 
 int ua_enricher(struct enrichee *enrichee__) {
-    char str[256] = {0,};
+    char value[MAX_ORIG_NAME_LEN] = {0,};
 
-    strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
-    char *output = ua2JsonStr(str);
-//    printf("[%ld]%s\n", strlen(output), output);
+    strncpy(value, enrichee__->orig_value, enrichee__->orig_value_len);
+    char *output = ua2JsonStr(value);
 
     if (!output) {
         enrichee__->orig_value_len = 0;
@@ -156,7 +155,7 @@ void combine_enrichee(const char *buf, char *result) {
 #ifdef TEST_JSON
 int main(int argc, char **argv) {
 
-    char result[8192];
+    char result[MAX_PAYLOAD_SIZE];
 
     init();
     ipwrapper_init();
@@ -167,7 +166,7 @@ int main(int argc, char **argv) {
 
     extract(buf_http, buf_http + strlen(buf_http));
 
-    memset(result, 0, 8192);
+    memset(result, 0, MAX_PAYLOAD_SIZE);
     combine_enrichee(buf_http, result);
 
     printf("%s\n", result);
@@ -180,10 +179,16 @@ int main(int argc, char **argv) {
 
 void payload_callback(rd_kafka_message_t *rkmessage) {
 
-    char result[4096] = {0,};
+    char result[MAX_PAYLOAD_SIZE] = {0,};
     const char *buf = (char *)rkmessage->payload;
     const int buf_len = (int)rkmessage->len;
 
+    if (buf_len > MAX_PAYLOAD_SIZE) {
+        fprintf(stderr, "payload size(%d) exceeds the threshold(%d)\n",
+        buf_len, MAX_PAYLOAD_SIZE);
+        write_data_log(buf, buf_len);
+        return;
+    }
 
     extract(buf, buf + buf_len);
     combine_enrichee(buf, result);

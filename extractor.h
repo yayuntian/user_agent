@@ -4,8 +4,8 @@
 #define MAX_INTERESTED_PAIRS 8
 #define MAX_ENRICHEE 32
 #define MAX_ORIG_NAME_LEN 128
-#define MAX_ORIG_VALUE_LEN 1024
 #define MAX_ENRICHED_VALUE_LEN 4096
+#define MAX_PAYLOAD_SIZE    8192
 
 #if __GNUC__ >= 3
 #define likely(x) __builtin_expect(!!(x), 1)
