@@ -62,7 +62,7 @@ static uint64_t rx_count = 0;
 
 size_t write_data_log(const char *data, size_t length) {
 
-    char *filename = "log.mafia";
+    char *filename = (kconf.skip == 3) ? "/dev/null" : "log.mafia";
 
     if (!fp) {
         if ((fp = fopen(filename, "wb")) == NULL) {
@@ -221,8 +221,12 @@ void payload_callback(rd_kafka_message_t *rkmessage) {
         return;
     }
 
-    extract(buf, buf + buf_len);
-    combine_enrichee(buf, result);
+    if (kconf.skip >= 2) {
+        strncpy(result, buf, buf_len);
+    } else {
+        extract(buf, buf + buf_len);
+        combine_enrichee(buf, result);
+    }
 
     log(KLOG_DEBUG, "%s\n", result);
     write_data_log(result, strlen(result));
@@ -231,6 +235,7 @@ void payload_callback(rd_kafka_message_t *rkmessage) {
 struct kafkaConf kconf = {
     .run = 1,
     .msg_cnt = -1,
+    .skip = 0,
     .verbosity = KLOG_INFO,
     .partition = RD_KAFKA_PARTITION_UA,
     .brokers = "localhost:9092",
@@ -257,8 +262,11 @@ static void usage(const char *argv0) {
             " -g <group>      Consumer group (%s)\n"
             " -b <brokes>     Broker address (%s)\n"
             " -s <skip>       Skip process [test]\n"
+            "                 1 - not regiest json cb, do parser, copy, write disk\n"
+            "                 2 - not parser json, do copy, write disk\n"
+            "                 3 - not parser json, do copy, write /dev/null\n"
             " -o <offset>     Offset to start consuming from:\n"
-            "                 beginning | end | stored\n"
+            "                 beginning[-2] | end[-1] | stored[-1000]\n"
             " -c <cnt>        Exit after consumering this number (-1)\n"
             " -q              Be quiet\n"
             " -e              Exit consumer when last message\n"
@@ -327,16 +335,16 @@ static void argparse (int argc, char **argv) {
 
 
 int main(int argc, char **argv) {
-
-    fprintf(stderr, "%% Offset Info: beginning[-2], stored[-1000], end[-1]\n");
     argparse(argc, argv);
 
     init();
     ipwrapper_init();
 
-    register_enricher("src_ip", ip_enricher);
-    register_enricher("dst_ip", ip_enricher);
-    //register_enricher("user_agent", ua_enricher);
+    if (kconf.skip < 1) {
+        register_enricher("src_ip", ip_enricher);
+        register_enricher("dst_ip", ip_enricher);
+        //register_enricher("user_agent", ua_enricher);
+    }
 
     init_kafka_consumer();
 
