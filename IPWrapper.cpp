@@ -57,7 +57,6 @@ char *ip2JsonStr(const char *ip) {
         strncpy(ch, ip + 1, iplen);
         ch[iplen - 2] = '\0';
         ipaddr = ch;
-        raw = ch;
     }
 
     vector<string> v(12);
@@ -79,49 +78,27 @@ char *ip2JsonStr(const char *ip) {
     strcat(jsonStr, dec);
 
     strcat(jsonStr, ",\"raw\":");
+
     strcat(jsonStr, raw);
 
     strcat(jsonStr, ",\"dotted\":\"");
     strcat(jsonStr, ipaddr);
 
-    strcat(jsonStr, ",\"region\":\"");
+    strcat(jsonStr, "\",\"region\":\"");
     strcat(jsonStr, v[3].c_str());
 
-    strcat(jsonStr, ",\"isp\":\"");
+    strcat(jsonStr, "\",\"isp\":\"");
     strcat(jsonStr, v[5].c_str());
 
-    strcat(jsonStr, ",\"longtitude\":\"");
+    strcat(jsonStr, "\",\"longtitude\":");
     strcat(jsonStr, v[9].c_str());
 
-    strcat(jsonStr, ",\"latitude\":\"");
+    strcat(jsonStr, ",\"latitude\":");
     strcat(jsonStr, v[10].c_str());
-    strcat(jsonStr, "\"}");
+    strcat(jsonStr, "}");
 
     return jsonStr;
 }
-
-
-//char *ipwrapper_query(const char *ip) {
-//    char ch[32] = {0,};
-//    const char *ipaddr = NULL;
-//    const char *raw = ip;
-//
-//    const char *isdot = strstr(ip, ".");
-//    if (!isdot) {   // "1916214160" => 114.55.27.144
-//        iptostr(ch, 32, atoi(ip));
-//        ipaddr = ch;
-//    } else {    // "58.214.57.66" => 58.214.57.66
-//        int iplen = strlen(ip);
-//        strncpy(ch, ip + 1, iplen);
-//        ch[iplen - 2] = '\0';
-//        ipaddr = ch;
-//        raw = ch;
-//    }
-//
-//    const char *result = finder->Query(ipaddr).c_str();
-//
-//    return ip2JsonStr(result, ipaddr, raw);
-//}
 
 
 char *ua2JsonStr(const char *ua) {
@@ -138,40 +115,30 @@ char *ua2JsonStr(const char *ua) {
         strcat(jsonStr, "false");
     }
 
+//    echo_ua(p);
+
     strcat(jsonStr, ",\"browser\":");
     strcat(jsonStr, p.browser.Name.c_str());
 
-    strcat(jsonStr, ",\"browser_version\":");
+    strcat(jsonStr, "\",\"browser_version\":\"");
     strcat(jsonStr, p.browser.Version.c_str());
 
-    strcat(jsonStr, ",\"engine\":");
+    strcat(jsonStr, "\",\"engine\":\"");
     strcat(jsonStr, p.browser.Engine.c_str());
 
-    strcat(jsonStr, ",\"engine_version\":");
+    strcat(jsonStr, "\",\"engine_version\":\"");
     strcat(jsonStr, p.browser.EngineVersion.c_str());
 
-    strcat(jsonStr, ",\"os\":");
+    strcat(jsonStr, "\",\"os\":\"");
     strcat(jsonStr, p.os.c_str());
 
-    strcat(jsonStr, ",\"platform\":");
+    strcat(jsonStr, "\",\"platform\":\"");
     strcat(jsonStr, p.platform.c_str());
 
-    strcat(jsonStr, ",\"raw\":");
+    strcat(jsonStr, "\",\"raw\":");
     strcat(jsonStr, ua);
 
-    strcat(jsonStr, "\"}");
+    strcat(jsonStr, "}");
 
     return jsonStr;
 }
-
-
-
-
-//int main()
-//{
-//    ipwrapper_init();
-//
-//    ipwrapper_query("12.25.26.35");
-//
-//    return 0;
-//}

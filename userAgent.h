@@ -52,4 +52,5 @@ void checkBot(UserAgent& p, vector<Section>& sections);
 void detectBrowser(UserAgent& p, vector<Section>& sections);
 
 void Parse(UserAgent& p, string ua);
+void echo_ua(UserAgent& p);
 #endif //MAFIA_UA_H

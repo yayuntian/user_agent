@@ -34,7 +34,7 @@ static char *buf_http = "{\n"
         "        \"in_pkts\": 1, \n"
         "        \"http_method\": 1, \n"
         "        \"out_pkts\": 6, \n"
-        "        \"user_agent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) \\\"apple\\\":\\\"WebKit/537.36\\\" (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36 JianKongBao Monitor 1.1\", \n"
+        "        \"user_agent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) appleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36 JianKongBao Monitor 1.1\", \n"
         "        \"dst_ip\": 1916214160, \n"
         "        \"https_flag\": 0, \n"
         "        \"src_port\": 43391, \n"
@@ -72,7 +72,7 @@ int ip_enricher(struct enrichee *enrichee__)
 
     strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
     char *output = ip2JsonStr(str);
-    printf("%s\n", output);
+    printf("[%ld]%s\n", strlen(output), output);
     return 0;
 }
 
@@ -82,7 +82,7 @@ int ua_enricher(struct enrichee *enrichee__)
 
     strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
     char *output = ua2JsonStr(str);
-    printf("%s\n", output);
+    printf("[%ld]%s\n", strlen(output), output);
 
     return 0;
 }
