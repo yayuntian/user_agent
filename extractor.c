@@ -4,29 +4,10 @@
 #include <string.h>
 #include "extractor.h"
 
-#define MAX_INTERESTED_PAIRS 8
-#define MAX_ENRICHEE 32
-#define MAX_ORIG_NAME_LEN 128
-#define MAX_ORIG_VALUE_LEN 1024
-#define MAX_ENRICHED_VALUE_LEN 4096
-
-#if __GNUC__ >= 3
-    #define likely(x) __builtin_expect(!!(x), 1)
-    #define unlikely(x) __builtin_expect(!!(x), 0)
-#else
-    #define likely(x) (x)
-    #define unlikely(x) (x)
-#endif
-
-struct interested_pair {
-    int name_len;
-    char *name;
-    enricher enricher__;
-};
 static struct interested_pair interested_pairs[MAX_INTERESTED_PAIRS];
 static int num_interested_pairs = 0;
 
-static struct enrichee enrichees[MAX_ENRICHEE];
+struct enrichee enrichees[MAX_ENRICHEE];
 
 int init()
 {

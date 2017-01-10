@@ -1,15 +1,79 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <sys/time.h>
+
 #include "extractor.h"
+#include "IPWrapper.h"
+
+static char *buf_http = "{\n"
+        "    \"dawn_ts0\": 1482978771547000, \n"
+        "    \"guid\": \"4a859fff6e5c4521aab187eee1cfceb8\", \n"
+        "    \"device_id\": \"26aae27e-ffe5-5fc8-9281-f82cf4e288ee\", \n"
+        "    \"probe\": {\n"
+        "        \"name\": \"cloudsensor\", \n"
+        "        \"hostname\": \"iZbp1gd3xwhcctm4ax2ruwZ\"\n"
+        "    }, \n"
+        "    \"appname\": \"cloudsensor\", \n"
+        "    \"type\": \"http\", \n"
+        "    \"kafka\": {\n"
+        "        \"topic\": \"cloudsensor\"\n"
+        "    }, \n"
+        "    \"aggregate_count\": 1, \n"
+        "    \"http\": {\n"
+        "        \"latency_sec\": 0, \n"
+        "        \"in_bytes\": 502, \n"
+        "        \"status_code\": 200, \n"
+        "        \"out_bytes\": 8625, \n"
+        "        \"dst_port\": 80, \n"
+        "        \"src_ip\": \"58.214.57.66\", \n"
+        "        \"xff\": \"\", \n"
+        "        \"url\": \"/PHP/index.html\", \n"
+        "        \"refer\": \"\", \n"
+        "        \"l4_protocol\": \"tcp\", \n"
+        "        \"in_pkts\": 1, \n"
+        "        \"http_method\": 1, \n"
+        "        \"out_pkts\": 6, \n"
+        "        \"user_agent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) \\\"apple\\\":\\\"WebKit/537.36\\\" (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36 JianKongBao Monitor 1.1\", \n"
+        "        \"dst_ip\": 1916214160, \n"
+        "        \"https_flag\": 0, \n"
+        "        \"src_port\": 43391, \n"
+        "        \"latency_usec\": 498489, \n"
+        "        \"host\": \"114.55.27.144\", \n"
+        "        \"url_query\": \"\"\n"
+        "    }, \n"
+        "    \"probe_ts\": 1482978771, \n"
+        "    \"dawn_ts1\": 1482978771547000, \n"
+        "    \"topic\": \"cloudsensor\"\n"
+        "}";
+
+
+FILE *fp = NULL;
+
+size_t write_data_log(const char *data, size_t length) {
+
+    char *filename = "log.mafia";
+
+    if (!fp) {
+        if((fp = fopen (filename, "wb")) == NULL) {
+            fprintf(stderr, "open file error: %s\n", filename);
+            return 0;
+        }
+    }
+    size_t ret = fwrite (data , sizeof(char), length, fp);
+
+    return ret;
+}
+
 
 int ip_enricher(struct enrichee *enrichee__)
 {
     char str[256] = {0,};
 
     strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
-    printf("orig_value: %s, len: %d\n",
-           str, enrichee__->orig_value_len);
+//    printf("orig_value: %s, len: %d\n", str, enrichee__->orig_value_len);
+
+    ipwrapper_query(str);
     return 0;
 }
 
@@ -18,87 +82,33 @@ int ua_enricher(struct enrichee *enrichee__)
     char str[256] = {0,};
 
     strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
-    printf("orig_value: %s, len: %d\n",
-           str, enrichee__->orig_value_len);
+//    printf("orig_value: %s, len: %d\n", str, enrichee__->orig_value_len);
     return 0;
 }
 
-uint64_t rdtsc()
-{
-    unsigned long a, d;
-    __asm__ __volatile__("cpuid; rdtsc" : "=a" (a), "=d" (d) : : "ebx", "ecx");
-    return a | ((uint64_t)d << 32);
-}
 
 int main(int argc, char **argv)
 {
-    //char *buf = "{ \"foo\": \"bar\", \"src_ip\": \"127.0.0.1\", \"name\": 12345 }";
-    char *buf =
-"{"
-"    \"dawn_ts0\": 1483522099153000, "
-"    \"guid\": \"31\", "
-"    \"device_id\": \"79bf7e53-d92f-5cdd-a7c3-3e9e97685c2c\", "
-"    \"probe\": {"
-"        \"name\": \"cloudsensor\""
-"    }, "
-"    \"appname\": \"cloudsensor\", "
-"    \"type\": \"tcp\", "
-"    \"kafka\": {"
-"        \"topic\": \"cloudsensor\""
-"    }, "
-"    \"aggregate_count\": 1, "
-"    \"tcp\": {"
-"        \"src_isp\": 0, "
-"        \"l4_proto\": 6, "
-"        \"out_bytes\": 7364503, "
-"        \"dst_port\": 3306, "
-"        \"retransmitted_out_fin_pkts\": 0, "
-"        \"client_latency_sec\": 0, "
-"        \"window_zero_size\": 0, "
-"        \"src_ipv4\": 178257969, "
-"        \"topic\": \"tcp\", "
-"        \"in_pkts\": 922, "
-"        \"src_region\": 0, "
-"        \"retransmitted_out_payload_pkts\": 5, "
-"        \"dst_ipv4\": 178808905, "
-"        \"ts\": 1483522099, "
-"        \"final_status\": 3, "
-"        \"retransmitted_in_syn_pkts\": 0, "
-"        \"src_ip\": 178257969, "
-"        \"server_latency_sec\": 0, "
-"        \"l4_protocol\": 6, "
-"        \"bytes_in\": 62654, "
-"        \"src_port\": 58472, "
-"        \"retransmitted_out_syn_pkts\": 0, "
-"        \"retransmitted_in_ack_pkts\": 126, "
-"        \"out_pkts\": 4871, "
-"        \"device_id\": \"79bf7e53-d92f-5cdd-a7c3-3e9e97685c2c\", "
-"        \"guid\": \"31\", "
-"        \"bytes_out\": 7364503, "
-"        \"retransmitted_in_payload_pkts\": 0, "
-"        \"dst_ip\": 178808905, "
-"        \"in_bytes\": 62654, "
-        "\"user_agent\" : \"Mozilla/5.0 (Wind,:ow:\"s NT 10.0; Win64; x64) AppleWebKit/537.3\","
-"        \"retransmitted_out_ack_pkts\": 0, "
-"        \"server_latency_usec\": 5055, "
-"        \"client_latency_usec\": 6955, "
-"        \"retransmitted_in_fin_pkts\": 0"
-"    }, "
-"    \"probe_ts\": 1483522099, "
-"    \"dawn_ts1\": 1483522099153000, "
-"    \"topic\": \"cloudsensor\""
-"}";
-
-    uint64_t begin, end;
-
     init();
+
+    ipwrapper_init();
+
     register_enricher("src_ip", ip_enricher);
     register_enricher("dst_ip", ip_enricher);
     register_enricher("user_agent", ua_enricher);
-    begin = rdtsc();
-    extract(buf, buf + strlen(buf));
-    end = rdtsc();
-    printf("Cost: %ld cycles.\n", end - begin);
 
+
+    extract(buf_http, buf_http + strlen(buf_http));
+
+    int i;
+    for (i = 0; i < MAX_ENRICHEE; i++) {
+        if (enrichees[i].orig_value_len == 0) {
+            break;
+        }
+
+        char value[256] = {0,};
+        strncpy(value, enrichees[i].orig_value, enrichees[i].orig_value_len);
+        printf("## orig name: %s, len: %d\n", value, enrichees[i].orig_value_len);
+    }
     return 0;
 }

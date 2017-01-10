@@ -7,8 +7,6 @@ CXXLIBS = -lboost_regex
 
 OBJS = userAgent.o operatingSystem.o bot.o browser.o kafkaConsumer.o
 
-JSON_OBJS = main.o extractor.o
-
 TARGET = mafia
 
 %.o: %.cpp
@@ -22,9 +20,10 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) -o $@ $(OBJS) $(CXXLIBS) $(KAFKA_LIBS)
 
+JSON_OBJS = main.o extractor.o IPLocator.o IPWrapper.o
 json: $(JSON_OBJS)
-	$(CC) -o $@ $(JSON_OBJS) $(KAFKA_LIBS)
+	$(CXX) -o $@ $(JSON_OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.o $(TARGET)
+	rm -f *.o $(TARGET) json
