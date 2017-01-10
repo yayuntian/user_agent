@@ -7,6 +7,7 @@
 #include "IPWrapper.h"
 
 static char *buf_http = "{\n"
+        "    \"src_ip\": 5689875,\n"
         "    \"dawn_ts0\": 1482978771547000, \n"
         "    \"guid\": \"4a859fff6e5c4521aab187eee1cfceb8\", \n"
         "    \"device_id\": \"26aae27e-ffe5-5fc8-9281-f82cf4e288ee\", \n"
@@ -26,7 +27,7 @@ static char *buf_http = "{\n"
         "        \"status_code\": 200, \n"
         "        \"out_bytes\": 8625, \n"
         "        \"dst_port\": 80, \n"
-        "        \"src_ip\": \"58.214.57.66\", \n"
+        "        \"src_ip\": 3661432842, \n"
         "        \"xff\": \"\", \n"
         "        \"url\": \"/PHP/index.html\", \n"
         "        \"refer\": \"\", \n"
@@ -44,7 +45,9 @@ static char *buf_http = "{\n"
         "    }, \n"
         "    \"probe_ts\": 1482978771, \n"
         "    \"dawn_ts1\": 1482978771547000, \n"
-        "    \"topic\": \"cloudsensor\"\n"
+        "    \"topic\": \"cloudsensor\",\n"
+        "\t\"dst_ip\": \"192.168.10.12\",\n"
+        "\t\"user_agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586\"\n"
         "}";
 
 
@@ -55,41 +58,60 @@ size_t write_data_log(const char *data, size_t length) {
     char *filename = "log.mafia";
 
     if (!fp) {
-        if((fp = fopen (filename, "wb")) == NULL) {
+        if ((fp = fopen(filename, "wb")) == NULL) {
             fprintf(stderr, "open file error: %s\n", filename);
             return 0;
         }
     }
-    size_t ret = fwrite (data , sizeof(char), length, fp);
+    size_t ret = fwrite(data, sizeof(char), length, fp);
 
     return ret;
 }
 
 
-int ip_enricher(struct enrichee *enrichee__)
-{
+int ip_enricher(struct enrichee *enrichee__) {
     char str[256] = {0,};
 
     strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
     char *output = ip2JsonStr(str);
-    printf("[%ld]%s\n", strlen(output), output);
+//    printf("[%ld]%s\n", strlen(output), output);
+
+    if (!output) {
+        enrichee__->orig_value_len = 0;
+        enrichee__->enriched_value_len = 0;
+        return 0;
+    }
+
+    int len = strlen(output);
+    memset(enrichee__->enriched_value, 0, MAX_ENRICHED_VALUE_LEN);
+    strncpy(enrichee__->enriched_value, output, len);
+    enrichee__->enriched_value_len = len;
+
     return 0;
 }
 
-int ua_enricher(struct enrichee *enrichee__)
-{
+int ua_enricher(struct enrichee *enrichee__) {
     char str[256] = {0,};
 
     strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
     char *output = ua2JsonStr(str);
-    printf("[%ld]%s\n", strlen(output), output);
+//    printf("[%ld]%s\n", strlen(output), output);
 
+    if (!output) {
+        enrichee__->orig_value_len = 0;
+        enrichee__->enriched_value_len = 0;
+        return 0;
+    }
+
+    int len = strlen(output);
+    memset(enrichee__->enriched_value, 0, MAX_ENRICHED_VALUE_LEN);
+    strncpy(enrichee__->enriched_value, output, len);
+    enrichee__->enriched_value_len = len;
     return 0;
 }
 
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     init();
 
     ipwrapper_init();
@@ -102,14 +124,41 @@ int main(int argc, char **argv)
     extract(buf_http, buf_http + strlen(buf_http));
 
     int i;
+    char result[8192] = {0,};
+
+
+    int offset_buf = 0;
+    int offset_result = 0;
+
+    const char *next_clean_ptr;
+    int next_clean_len;
+
     for (i = 0; i < MAX_ENRICHEE; i++) {
-        if (enrichees[i].orig_value_len == 0) {
+        if (enrichees[i].orig_value == NULL) {
             break;
         }
 
-        char value[256] = {0,};
-        strncpy(value, enrichees[i].orig_value, enrichees[i].orig_value_len);
-        printf("## orig name: %s, len: %d\n", value, enrichees[i].orig_value_len);
+        // copy before i clean buf
+        next_clean_ptr = buf_http + offset_buf;
+        next_clean_len = enrichees[i].orig_value - (buf_http + offset_buf);
+
+        strncpy(result + offset_result, next_clean_ptr, next_clean_len);
+
+        offset_buf += next_clean_len + enrichees[i].orig_value_len;
+        offset_result += next_clean_len;
+
+
+        // copy i fix
+        strncpy(result + offset_result, enrichees[i].enriched_value, enrichees[i].enriched_value_len);
+        offset_result += enrichees[i].enriched_value_len;
     }
+
+    next_clean_ptr = buf_http + offset_buf;
+    if (offset_buf < strlen(buf_http)) {
+        next_clean_len = strlen(buf_http) - offset_buf;
+        strncpy(result + offset_result, next_clean_ptr, next_clean_len);
+    }
+
+    printf("###################\n%s\n", result);
     return 0;
 }

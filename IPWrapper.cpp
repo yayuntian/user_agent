@@ -59,20 +59,27 @@ char *ip2JsonStr(const char *ip) {
         ipaddr = ch;
     }
 
-    vector<string> v(12);
+    string region = "";
+    string isp = "";
+    string longtitude = "";
+    string latitude = "";
+
+    vector<string> v;
     const char *query = finder->Query(ipaddr).c_str();
     split(v, query, is_any_of(partten));
 
-    if (v.size() != 11) {
-        fprintf(stderr, "ip split error\n");
-        return NULL;
+    if (v.size() > 10 && v[5] != "qqzeng-ip") {
+        region = v[3];
+        isp = v[5];
+        longtitude = v[9];
+        latitude = v[10];
     }
 
     memset(jsonStr, 0, sizeof(jsonStr));
 
     char dec[32] = {0,};
     uint32_t i = strtoip(ipaddr);
-    sprintf(dec, "%d", i);
+    sprintf(dec, "%u", i);
 
     strcat(jsonStr, "{\"decimal\":");
     strcat(jsonStr, dec);
@@ -85,17 +92,17 @@ char *ip2JsonStr(const char *ip) {
     strcat(jsonStr, ipaddr);
 
     strcat(jsonStr, "\",\"region\":\"");
-    strcat(jsonStr, v[3].c_str());
+    strcat(jsonStr, region.c_str());
 
     strcat(jsonStr, "\",\"isp\":\"");
-    strcat(jsonStr, v[5].c_str());
+    strcat(jsonStr, isp.c_str());
 
-    strcat(jsonStr, "\",\"longtitude\":");
-    strcat(jsonStr, v[9].c_str());
+    strcat(jsonStr, "\",\"longtitude\":\"");
+    strcat(jsonStr, longtitude.c_str());
 
-    strcat(jsonStr, ",\"latitude\":");
-    strcat(jsonStr, v[10].c_str());
-    strcat(jsonStr, "}");
+    strcat(jsonStr, "\",\"latitude\":\"");
+    strcat(jsonStr, latitude.c_str());
+    strcat(jsonStr, "\"}");
 
     return jsonStr;
 }
