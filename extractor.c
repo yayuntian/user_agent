@@ -139,6 +139,7 @@ int extract(const char *buf, const char *buf_end)
                                     break;
                                 }
                             }
+                            enrichees[num_enrichees].use = 1;
                             enrichees[num_enrichees].orig_value = prev_delimiter + prefix_space + 1;
                             enrichees[num_enrichees].orig_value_len = pos - suffix_space - enrichees[num_enrichees].orig_value;
                             //printf("The value is: %.*s\n", enrichees[num_enrichees].orig_value_len, enrichees[num_enrichees].orig_value);

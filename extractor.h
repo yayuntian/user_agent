@@ -24,6 +24,8 @@ struct enrichee {
 
     int enriched_value_len;
     char *enriched_value;
+
+    int use;
 };
 
 typedef int (*enricher)(struct enrichee *enrichee__);

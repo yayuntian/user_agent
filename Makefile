@@ -5,7 +5,8 @@ CFLAGS += -std=c99 -msse4.2 $(FLAGS)
 KAFKA_LIBS = -lrdkafka
 CXXLIBS = -lboost_regex
 
-OBJS = userAgent.o operatingSystem.o bot.o browser.o kafkaConsumer.o
+OBJS = userAgent.o operatingSystem.o bot.o browser.o kafkaConsumer.o    \
+        main.o extractor.o IPLocator.o IPWrapper.o
 
 TARGET = mafia
 

@@ -5,7 +5,9 @@
 
 #include "extractor.h"
 #include "IPWrapper.h"
+#include "kafkaConsumer.h"
 
+#ifdef TEST_JSON
 static char *buf_http = "{\n"
         "    \"src_ip\": 5689875,\n"
         "    \"dawn_ts0\": 1482978771547000, \n"
@@ -49,7 +51,7 @@ static char *buf_http = "{\n"
         "\t\"dst_ip\": \"192.168.10.12\",\n"
         "\t\"user_agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586\"\n"
         "}";
-
+#endif
 
 FILE *fp = NULL;
 
@@ -64,6 +66,7 @@ size_t write_data_log(const char *data, size_t length) {
         }
     }
     size_t ret = fwrite(data, sizeof(char), length, fp);
+    fputs("\n", fp);
 
     return ret;
 }
@@ -121,9 +124,10 @@ void combine_enrichee(const char *buf, char *result) {
     int next_clean_len;
 
     for (i = 0; i < MAX_ENRICHEE; i++) {
-        if (enrichees[i].orig_value == NULL) {
+        if (enrichees[i].use == 0) {
             break;
         }
+        enrichees[i].use = 0;
 
         // copy before i clean buf
         next_clean_ptr = buf + offset_buf;
@@ -135,8 +139,10 @@ void combine_enrichee(const char *buf, char *result) {
         offset_result += next_clean_len;
 
         // copy i fix
-        strncpy(result + offset_result, enrichees[i].enriched_value, enrichees[i].enriched_value_len);
-        offset_result += enrichees[i].enriched_value_len;
+        if (enrichees[i].enriched_value_len) {
+            strncpy(result + offset_result, enrichees[i].enriched_value, enrichees[i].enriched_value_len);
+            offset_result += enrichees[i].enriched_value_len;
+        }
     }
 
     next_clean_ptr = buf + offset_buf;
@@ -147,6 +153,7 @@ void combine_enrichee(const char *buf, char *result) {
 }
 
 
+#ifdef TEST_JSON
 int main(int argc, char **argv) {
 
     char result[8192];
@@ -164,6 +171,48 @@ int main(int argc, char **argv) {
     combine_enrichee(buf_http, result);
 
     printf("%s\n", result);
+
+    return 0;
+}
+#endif
+
+
+
+void payload_callback(rd_kafka_message_t *rkmessage) {
+
+    char result[4096] = {0,};
+    const char *buf = (char *)rkmessage->payload;
+    const int buf_len = (int)rkmessage->len;
+
+
+    extract(buf, buf + buf_len);
+    combine_enrichee(buf, result);
+
+    printf("%s\n", result);
+    write_data_log(result, strlen(result));
+}
+
+struct kafkaConf kconf = {
+    .run = 1,
+    .partition = RD_KAFKA_PARTITION_UA,
+    .brokers = "10.161.166.192:8301",
+    .group = "rdkafka_consumer_mafia",
+    .topic = "cloudsensor",     // now only one, fix it
+    .topic_count = 1,
+    .payload_cb = payload_callback
+};
+
+
+int main(int argc, char **argv) {
+
+    init();
+    ipwrapper_init();
+
+    register_enricher("src_ip", ip_enricher);
+    register_enricher("dst_ip", ip_enricher);
+    register_enricher("user_agent", ua_enricher);
+
+    init_kafka_consumer();
 
     return 0;
 }

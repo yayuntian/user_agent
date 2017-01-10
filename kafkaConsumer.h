@@ -33,4 +33,6 @@ struct kafkaConf {
 
 extern struct kafkaConf kconf;
 
+int init_kafka_consumer(void);
+
 #endif //MAFIA_KAFKACONSUMER_H
