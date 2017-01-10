@@ -20,7 +20,8 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) -o $@ $(OBJS) $(CXXLIBS) $(KAFKA_LIBS)
 
-JSON_OBJS = main.o extractor.o IPLocator.o IPWrapper.o
+JSON_OBJS = main.o extractor.o IPLocator.o IPWrapper.o \
+    userAgent.o operatingSystem.o bot.o browser.o
 json: $(JSON_OBJS)
 	$(CXX) -o $@ $(JSON_OBJS) $(CXXLIBS) $(KAFKA_LIBS)
 

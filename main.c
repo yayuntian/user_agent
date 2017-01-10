@@ -71,7 +71,7 @@ int ip_enricher(struct enrichee *enrichee__)
     char str[256] = {0,};
 
     strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
-    char *output = ipwrapper_query(str);
+    char *output = ip2JsonStr(str);
     printf("%s\n", output);
     return 0;
 }
@@ -81,7 +81,9 @@ int ua_enricher(struct enrichee *enrichee__)
     char str[256] = {0,};
 
     strncpy(str, enrichee__->orig_value, enrichee__->orig_value_len);
-//    printf("orig_value: %s, len: %d\n", str, enrichee__->orig_value_len);
+    char *output = ua2JsonStr(str);
+    printf("%s\n", output);
+
     return 0;
 }
 

@@ -9,6 +9,8 @@
 #include "IPWrapper.h"
 #include "IPLocator.h"
 
+#include "userAgent.h"
+
 using namespace boost::algorithm;
 
 
@@ -39,11 +41,28 @@ static inline void iptostr(char ipstr[], uint16_t len, uint32_t ip) {
 
 char jsonStr[1024];
 
-char *toJsonStr(const string& str, const char *ipaddr, const char *raw) {
+char *ip2JsonStr(const char *ip) {
 
     string partten = "|";
-    vector<string> v(10);
-    split(v, str, is_any_of(partten));
+    char ch[32] = {0,};
+    const char *ipaddr = NULL;
+    const char *raw = ip;
+
+    const char *isdot = strstr(ip, ".");
+    if (!isdot) {   // "1916214160" => 114.55.27.144
+        iptostr(ch, 32, atoi(ip));
+        ipaddr = ch;
+    } else {    // "58.214.57.66" => 58.214.57.66
+        int iplen = strlen(ip);
+        strncpy(ch, ip + 1, iplen);
+        ch[iplen - 2] = '\0';
+        ipaddr = ch;
+        raw = ch;
+    }
+
+    vector<string> v(12);
+    const char *query = finder->Query(ipaddr).c_str();
+    split(v, query, is_any_of(partten));
 
     if (v.size() != 11) {
         fprintf(stderr, "ip split error\n");
@@ -52,12 +71,12 @@ char *toJsonStr(const string& str, const char *ipaddr, const char *raw) {
 
     memset(jsonStr, 0, sizeof(jsonStr));
 
-    char ipstr[32] = {0,};
+    char dec[32] = {0,};
     uint32_t i = strtoip(ipaddr);
-    sprintf(ipstr, "%d", i);
+    sprintf(dec, "%d", i);
 
     strcat(jsonStr, "{\"decimal\":");
-    strcat(jsonStr, ipstr);
+    strcat(jsonStr, dec);
 
     strcat(jsonStr, ",\"raw\":");
     strcat(jsonStr, raw);
@@ -76,35 +95,76 @@ char *toJsonStr(const string& str, const char *ipaddr, const char *raw) {
 
     strcat(jsonStr, ",\"latitude\":\"");
     strcat(jsonStr, v[10].c_str());
-    strcat(jsonStr, "\"}\0");
+    strcat(jsonStr, "\"}");
 
     return jsonStr;
 }
 
 
-char *ipwrapper_query(const char *ip) {
-    char ch[32] = {0,};
-    const char *ipaddr = NULL;
-    const char *raw = ip;
+//char *ipwrapper_query(const char *ip) {
+//    char ch[32] = {0,};
+//    const char *ipaddr = NULL;
+//    const char *raw = ip;
+//
+//    const char *isdot = strstr(ip, ".");
+//    if (!isdot) {   // "1916214160" => 114.55.27.144
+//        iptostr(ch, 32, atoi(ip));
+//        ipaddr = ch;
+//    } else {    // "58.214.57.66" => 58.214.57.66
+//        int iplen = strlen(ip);
+//        strncpy(ch, ip + 1, iplen);
+//        ch[iplen - 2] = '\0';
+//        ipaddr = ch;
+//        raw = ch;
+//    }
+//
+//    const char *result = finder->Query(ipaddr).c_str();
+//
+//    return ip2JsonStr(result, ipaddr, raw);
+//}
 
-    const char *isdot = strstr(ip, ".");
-    if (!isdot) {   // "1916214160" => 114.55.27.144
-        iptostr(ch, 32, atoi(ip));
-        ipaddr = ch;
-    } else {    // "58.214.57.66" => 58.214.57.66
-        int iplen = strlen(ip);
-        strncpy(ch, ip + 1, iplen);
-        ch[iplen - 2] = '\0';
-        ipaddr = ch;
-        raw = ch;
+
+char *ua2JsonStr(const char *ua) {
+
+    UserAgent p;
+    Parse(p, ua);
+
+    memset(jsonStr, 0, sizeof(jsonStr));
+
+    strcat(jsonStr, "{\"bot\":");
+    if (p.bot == true) {
+        strcat(jsonStr, "true");
+    } else {
+        strcat(jsonStr, "false");
     }
 
-    const char *result = finder->Query(ipaddr).c_str();
-//    printf("ipaddr: %s => %s\n# result: %s\n",
-//           ip, ipaddr, result);
+    strcat(jsonStr, ",\"browser\":");
+    strcat(jsonStr, p.browser.Name.c_str());
 
-    return toJsonStr(result, ipaddr, raw);
+    strcat(jsonStr, ",\"browser_version\":");
+    strcat(jsonStr, p.browser.Version.c_str());
+
+    strcat(jsonStr, ",\"engine\":");
+    strcat(jsonStr, p.browser.Engine.c_str());
+
+    strcat(jsonStr, ",\"engine_version\":");
+    strcat(jsonStr, p.browser.EngineVersion.c_str());
+
+    strcat(jsonStr, ",\"os\":");
+    strcat(jsonStr, p.os.c_str());
+
+    strcat(jsonStr, ",\"platform\":");
+    strcat(jsonStr, p.platform.c_str());
+
+    strcat(jsonStr, ",\"raw\":");
+    strcat(jsonStr, ua);
+
+    strcat(jsonStr, "\"}");
+
+    return jsonStr;
 }
+
+
 
 
 //int main()
