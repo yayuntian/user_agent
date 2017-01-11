@@ -1,14 +1,13 @@
+//
+// Created by tyy on 2017/1/6.
+//
 #include <iostream>
 #include <vector>
 #include <unordered_map>
 #include <cstdlib>
-#include <sys/time.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
-#include <boost/regex.hpp>
-#include <string>
-#include <cstring>
 
 #include "userAgent.h"
 #include "lrucache.h"

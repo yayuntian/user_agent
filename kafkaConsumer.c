@@ -1,9 +1,6 @@
-/**
- * Apache Kafka high level consumer example program
- * using the Kafka driver from librdkafka
- * (https://github.com/edenhill/librdkafka)
- */
-
+//
+// Created by tyy on 2017/1/9.
+//
 #include <ctype.h>
 #include <signal.h>
 #include <string.h>
