@@ -37,8 +37,8 @@ static inline void iptostr(char ipstr[], uint16_t len, uint32_t ip) {
             ip >> 24, (ip >> 16 & 0xff), (ip >> 8 & 0xff), (ip & 0xff));
 }
 
-
-char jsonStr[1024];
+#define MAX_JSON_STR 2048
+char jsonStr[MAX_JSON_STR];
 
 char *ip2JsonStr(const char *ip) {
 
@@ -74,7 +74,7 @@ char *ip2JsonStr(const char *ip) {
         latitude = v[10];
     }
 
-    memset(jsonStr, 0, sizeof(jsonStr));
+    memset(jsonStr, 0, MAX_JSON_STR);
 
     char dec[32] = {0,};
     uint32_t i = strtoip(ipaddr);
@@ -111,8 +111,9 @@ char *ua2JsonStr(const char *ua) {
 
     UserAgent p;
     Parse(p, ua);
+//    echo_ua(p);
 
-    memset(jsonStr, 0, sizeof(jsonStr));
+    memset(jsonStr, 0, MAX_JSON_STR);
 
     strcat(jsonStr, "{\"bot\":");
     if (p.bot == true) {
@@ -120,8 +121,6 @@ char *ua2JsonStr(const char *ua) {
     } else {
         strcat(jsonStr, "false");
     }
-
-//    echo_ua(p);
 
     strcat(jsonStr, ",\"browser\":");
     strcat(jsonStr, p.browser.Name.c_str());

@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -232,10 +233,44 @@ void payload_callback(rd_kafka_message_t *rkmessage) {
     write_data_log(result, strlen(result));
 }
 
+
+void read_file(void)
+{
+    FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    fp = fopen(kconf.filename, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Open file error\n");
+        exit(1);
+    }
+
+    while ((read = getline(&line, &len, fp)) != -1) {
+        line[read - 1] = '\0';
+//        printf("[%zu]%s", read, line);
+
+        rd_kafka_message_t msg_t;
+        msg_t.payload = (void *) line;
+        msg_t.len = read;
+        payload_callback(&msg_t);
+    }
+
+    fclose(fp);
+    if (line) {
+        free(line);
+    }
+
+    return;
+}
+
+
 struct kafkaConf kconf = {
     .run = 1,
     .msg_cnt = -1,
     .skip = 0,
+    .filename = NULL,
     .verbosity = KLOG_INFO,
     .partition = RD_KAFKA_PARTITION_UA,
     .brokers = "localhost:9092",
@@ -261,6 +296,7 @@ static void usage(const char *argv0) {
     printf("General options:\n"
             " -g <group>      Consumer group (%s)\n"
             " -b <brokes>     Broker address (%s)\n"
+            " -f <file>       Consumer from json file\n"
             " -s <skip>       Skip process [test]\n"
             "                 1 - not regiest json cb, do parser, copy, write disk\n"
             "                 2 - not parser json, do copy, write disk\n"
@@ -284,13 +320,16 @@ static void usage(const char *argv0) {
 static void argparse (int argc, char **argv) {
     int i, opt;
 
-    while ((opt = getopt(argc, argv, "g:b:s:o:c:qdh")) != -1) {
+    while ((opt = getopt(argc, argv, "g:b:s:o:c:f:qdh")) != -1) {
         switch (opt) {
             case 'b':
                 kconf.brokers = optarg;
                 break;
             case 'g':
                 kconf.group = optarg;
+                break;
+            case 'f':
+                kconf.filename = optarg;
                 break;
             case 's':
                 kconf.skip = atoi(optarg);
@@ -323,6 +362,11 @@ static void argparse (int argc, char **argv) {
         }
     }
 
+    if (kconf.filename != NULL) {
+        fprintf(stderr, "%% Read message from file: %s\n", kconf.filename);
+        return;
+    }
+
     kconf.topic_count = argc - optind;
     for (i = 0; i < kconf.topic_count; i++) {
         kconf.topic[i] = argv[optind + i];
@@ -344,6 +388,11 @@ int main(int argc, char **argv) {
         register_enricher("src_ip", ip_enricher);
         register_enricher("dst_ip", ip_enricher);
         //register_enricher("user_agent", ua_enricher);
+    }
+
+    if (kconf.filename != NULL) {
+        read_file();
+        return 0;
     }
 
     init_kafka_consumer();

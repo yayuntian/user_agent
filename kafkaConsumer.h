@@ -24,6 +24,7 @@ struct kafkaConf {
     int skip;
     int64_t msg_cnt;
 
+    char *filename;
 
     char *brokers;
     char *group;
