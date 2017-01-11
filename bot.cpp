@@ -65,7 +65,7 @@ void setSimple(UserAgent& p, string name, string version, bool bot) {
     if(!bot) {
         p.mozilla = "";
     }
-    p.browser.Name = name;
+    p.browser.Name = replace_all_copy(name, "\\", "");
     p.browser.Version = version;
     p.browser.Engine = "";
     p.browser.EngineVersion = "";

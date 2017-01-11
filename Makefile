@@ -35,4 +35,4 @@ ua: $(UA_OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.o $(TARGET) json
+	rm -f *.o $(TARGET) json ua

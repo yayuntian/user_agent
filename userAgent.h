@@ -5,6 +5,7 @@
 #ifndef MAFIA_UA_H
 #define MAFIA_UA_H
 
+#include <ctype.h>
 #include <sys/time.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
@@ -58,4 +59,11 @@ void detectBrowser(UserAgent& p, vector<Section>& sections);
 
 void Parse(UserAgent& p, string ua);
 void echo_ua(UserAgent& p);
+
+
+static inline int my_atoi(const char *buf) {
+    int i = 0;
+    while (!isdigit(buf[i])) i++;
+    return atoi(buf + i);
+}
 #endif //MAFIA_UA_H

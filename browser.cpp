@@ -81,8 +81,8 @@ void detectBrowser(UserAgent& p, vector<Section>& sections) {
 
             size_t len = comment.size();
             for (size_t i = 0; i < len; i++) {
-                if (starts_with(comment[i], "Trident/")) {
-                    switch (atoi(comment[i].c_str())) {
+                if (starts_with(comment[i], "Trident")) {
+                    switch (my_atoi(comment[i].c_str())) {
                         case 4:
                             p.browser.Version = "8.0";
                             break;
@@ -99,7 +99,9 @@ void detectBrowser(UserAgent& p, vector<Section>& sections) {
                 }
             }
             if (p.browser.Version == "") {
-                p.browser.Version = trim_copy(comment[1]);
+                string ver;
+                ver.assign(comment[1], 4, string::npos);
+                p.browser.Version = trim_copy(ver);
             }
         }
     }

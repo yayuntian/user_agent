@@ -46,11 +46,11 @@ string readUtil(string& ua, int& index, char delimiter, bool cat) {
 
 void parseProduct(Section& s, string product) {
 
-    std::vector<std::string> v(2);
+    std::vector<std::string> v;
     split(v, product, is_any_of("/"));
 
     if (v.size() == 2) {
-        s.name = v[0];
+        s.name = replace_all_copy(v[0], "\\", "");
         s.version = v[1];
         return;
     } else {
@@ -101,21 +101,19 @@ void Parse(UserAgent& p, string ua) {
         return;
     }
 
-    vector<Section> sections(10);
+    vector<Section> sections;
     initialize(p);
     p.ua = ua;
 
     int index = 0;
     int limit = ua.size();
-    int count = 0;
 
     while (index < limit) {
         Section s = parseSection(ua, index);
         if (!p.mobile && s.name == "Mobile") {
             p.mobile = true;
         }
-        //        sections.push_back(s);
-        sections[count++] = s;
+        sections.push_back(s);
     }
 
     if (sections.size() > 0) {

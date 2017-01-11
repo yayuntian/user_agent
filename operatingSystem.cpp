@@ -275,9 +275,9 @@ OSInfo getOSInfo(UserAgent& p) {
     osName(osSplit, name, version);
 
     if (contains(name, "/")) {
-        vector<string> s(2);
+        vector<string> s;
         split(s, name, is_any_of("/"));
-        name = s[0];
+        name = replace_all_copy(s[0], "\\", "");
         version = s[1];
     }
 
@@ -285,8 +285,8 @@ OSInfo getOSInfo(UserAgent& p) {
 
     return OSInfo {
         .FUllName = p.os,
-            .Name = name,
-            .Version = version
+        .Name = name,
+        .Version = version
     };
 }
 
