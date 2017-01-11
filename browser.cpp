@@ -3,18 +3,11 @@
 //
 
 #include <iostream>
+#include <cstdlib>
 #include <vector>
 #include <unordered_map>
-#include <cstdlib>
-#include <sys/time.h>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
 
 #include "userAgent.h"
-
-using namespace std;
-using namespace boost::algorithm;
 
 
 boost::regex ie11Regexp{"^rv:(.+)$"};

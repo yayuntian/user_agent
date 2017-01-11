@@ -5,8 +5,13 @@
 #ifndef MAFIA_UA_H
 #define MAFIA_UA_H
 
+#include <sys/time.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
+
 
 using namespace std;
+using namespace boost::algorithm;
 
 // A section contains the name of the product, its version and
 // an optional comment.

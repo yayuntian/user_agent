@@ -6,14 +6,9 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
-
-#include "wrapper.h"
 #include "ipLocator.h"
 #include "userAgent.h"
-
-using namespace boost::algorithm;
+#include "wrapper.h"
 
 
 IPSearch *finder;
@@ -119,7 +114,7 @@ char *ua2JsonStr(const char *ua) {
     memset(jsonStr, 0, MAX_JSON_STR);
 
     strcat(jsonStr, "{\"bot\":");
-    if (p.bot == true) {
+    if (p.bot) {
         strcat(jsonStr, "true");
     } else {
         strcat(jsonStr, "false");

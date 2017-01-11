@@ -28,6 +28,11 @@ JSON_OBJS = main.o extractor.o ipLocator.o wrapper.o \
 json: $(JSON_OBJS)
 	$(CXX) -o $@ $(JSON_OBJS) $(CXXLIBS) $(KAFKA_LIBS)
 
+UA_OBJS = test_ua.o userAgent.o operatingSystem.o bot.o browser.o
+ua: $(UA_OBJS)
+	$(CXX) -o $@ $(UA_OBJS) $(CXXLIBS)
+
+
 .PHONY: clean
 clean:
 	rm -f *.o $(TARGET) json
