@@ -79,7 +79,7 @@ size_t write_data_log(const char *data, size_t length) {
 
 
 int ip_enricher(struct enrichee *enrichee__) {
-    char value[MAX_ORIG_NAME_LEN] = {0,};
+    char value[MAX_ORIG_VAL_LEN] = {0,};
 
     strncpy(value, enrichee__->orig_value, enrichee__->orig_value_len);
     char *output = ip2JsonStr(value);
@@ -99,7 +99,7 @@ int ip_enricher(struct enrichee *enrichee__) {
 }
 
 int ua_enricher(struct enrichee *enrichee__) {
-    char value[MAX_ORIG_NAME_LEN] = {0,};
+    char value[MAX_ORIG_VAL_LEN] = {0,};
 
     strncpy(value, enrichee__->orig_value, enrichee__->orig_value_len);
     char *output = ua2JsonStr(value);
@@ -255,6 +255,10 @@ void read_file(void)
         msg_t.payload = (void *) line;
         msg_t.len = read;
         payload_callback(&msg_t);
+
+        if (kconf.run == 0) {
+            break;
+        }
     }
 
     fclose(fp);
@@ -387,7 +391,7 @@ int main(int argc, char **argv) {
     if (kconf.skip < 1) {
         register_enricher("src_ip", ip_enricher);
         register_enricher("dst_ip", ip_enricher);
-        //register_enricher("user_agent", ua_enricher);
+        register_enricher("user_agent", ua_enricher);
     }
 
     if (kconf.filename != NULL) {
