@@ -5,6 +5,7 @@
 #ifndef MAFIA_UA_H
 #define MAFIA_UA_H
 
+#include <string.h>
 #include <ctype.h>
 #include <sys/time.h>
 #include <boost/algorithm/string.hpp>
@@ -65,5 +66,13 @@ static inline int my_atoi(const char *buf) {
     int i = 0;
     while (!isdigit(buf[i])) i++;
     return atoi(buf + i);
+}
+
+static inline void remove_rchar(char *buf) {
+    // remove json '\' character, ex: Mozilla\/5.0
+    int len = strlen(buf);
+    while (buf[--len] == '\\') {
+        buf[len] = '\0';
+    }
 }
 #endif //MAFIA_UA_H

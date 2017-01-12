@@ -267,12 +267,19 @@ OSInfo getOSInfo(UserAgent& p) {
     osName(osSplit, name, version);
 
     if (contains(name, "/")) {
-        vector<string> s;
-        split(s, name, is_any_of("/"));
-        name = replace_all_copy(s[0], "\\", "");
-        version = s[1];
+        int s = name.size();
+        char buf[64] = {0,};
+        if (s < 64) {
+            strncpy(buf, name.c_str(), name.size());
+            char *ver = NULL;
+            char *ptr = strtok_r(buf, "/", &ver);
+            remove_rchar(buf);
+            name = buf;
+            if (ptr) {
+                version = ver;
+            }
+        }
     }
-
     version = replace_all_copy(version, "_", ".");
 
     return OSInfo {

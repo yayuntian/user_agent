@@ -45,15 +45,16 @@ void readUtil(string& ua, int ua_len, char *buf, int& index, char delimiter, boo
 
 void parseProduct(Section& s, char *product) {
 
-    std::vector<std::string> v;
-    split(v, product, is_any_of("/"));
+    char *ver = NULL;
+    char *ptr = strtok_r(product, "/", &ver);
 
-    if (v.size() == 2) {
-        s.name = replace_all_copy(v[0], "\\", "");
-        s.version = v[1];
-        return;
+    // remove json '\' character, ex: Mozilla\/5.0
+    remove_rchar(product);
+
+    s.name = product;
+    if (ptr != NULL) {
+        s.version = ver;
     } else {
-        s.name = product;
         s.version = "";
     }
 }
@@ -71,7 +72,6 @@ Section parseSection(string& ua, int ua_len, int& index) {
         index++;
         memset(buf, 0, 512);
         readUtil(ua, ua_len, buf, index, ')', true);
-        //split(s.comment, buffer, is_any_of("; "));
         split_regex(s.comment, buf, boost::regex("; ")) ;
         index++;
     }
