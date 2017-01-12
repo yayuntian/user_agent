@@ -53,11 +53,11 @@ struct UserAgent {
 };
 
 bool googleBot(UserAgent& p);
-void detectOS(UserAgent& p, Section& s);
-void checkBot(UserAgent& p, vector<Section>& sections);
-void detectBrowser(UserAgent& p, vector<Section>& sections);
+void detectOS(UserAgent& p, Section& s, int slen);
+void checkBot(UserAgent& p, vector<Section>& sections, int slen);
+void detectBrowser(UserAgent& p, vector<Section>& sections, int slen);
 
-void Parse(UserAgent& p, string ua);
+void Parse(UserAgent& p, string ua, const int ua_len);
 void echo_ua(UserAgent& p);
 
 

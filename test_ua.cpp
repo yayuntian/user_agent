@@ -540,7 +540,7 @@ string format(UserAgent& ua) {
 void TestUserAgent() {
     UserAgent ua;
     for (auto p : uastrings) {
-        Parse(ua, p.ua);
+        Parse(ua, p.ua, p.ua.size());
 
         if (p.expected != format(ua)) {
             fprintf(stderr, "Test: %s\ngot:      %s\nexpected: %s\n",
@@ -562,7 +562,7 @@ void BenchmarkUserAgent(string str, int loop) {
 
     gettimeofday(&start, NULL);
     for (i = 0; i < loop; i++) {
-        Parse(ua, str);
+        Parse(ua, str, str.size());
         if (i == 0) echo_ua(ua);
     }
     gettimeofday(&end, NULL);
@@ -610,7 +610,7 @@ int main(int argc, char **argv) {
     if (argc - optind > 0) {
         str = argv[optind];
         UserAgent ua;
-        Parse(ua, str);
+        Parse(ua, str, str.size());
         echo_ua(ua);
         exit(0);
     }

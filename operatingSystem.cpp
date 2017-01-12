@@ -8,8 +8,8 @@
 
 #include "userAgent.h"
 
-string getPlatform(vector<string>& comment) {
-    if (comment.size() > 0) {
+string getPlatform(vector<string>& comment, int slen) {
+    if (slen > 0) {
         if (comment[0] != "compatible") {
             if (starts_with(comment[0], "Windows")) {
                 return "Windows";
@@ -60,9 +60,7 @@ string normalizeOS(string name) {
 }
 
 
-void webKit(UserAgent& p, vector<string>& comment) {
-    size_t slen = comment.size();
-
+void webKit(UserAgent& p, vector<string>& comment, int slen) {
     if (p.platform == "webOS") {
         p.browser.Name = p.platform;
         p.os = "Palm";
@@ -120,8 +118,7 @@ void webKit(UserAgent& p, vector<string>& comment) {
 }
 
 
-void gecko(UserAgent& p, vector<string>& comment) {
-    size_t slen = comment.size();
+void gecko(UserAgent& p, vector<string>& comment, int slen) {
     if (slen <= 1) {
         return;
     }
@@ -153,8 +150,7 @@ void gecko(UserAgent& p, vector<string>& comment) {
 }
 
 
-void trident(UserAgent& p, vector<string>& comment) {
-    size_t slen = comment.size();
+void trident(UserAgent& p, vector<string>& comment, int slen) {
     p.platform = "Windows";
 
     if (p.os == "") {
@@ -164,7 +160,7 @@ void trident(UserAgent& p, vector<string>& comment) {
             p.os = "Windows NT 4.0";
         }
     }
-    for (size_t i = 0; i < slen; i++) {
+    for (int i = 0; i < slen; i++) {
         if (starts_with(comment[i], "IEMobile")) {
             p.mobile = true;
             return;
@@ -173,9 +169,7 @@ void trident(UserAgent& p, vector<string>& comment) {
 }
 
 
-void opera(UserAgent& p, vector<string>& comment) {
-    int slen = comment.size();
-
+void opera(UserAgent& p, vector<string>& comment, int slen) {
     if (starts_with(comment[0], "Windows")) {
         p.platform = "Windows";
         p.os = normalizeOS(comment[0]);
@@ -203,9 +197,7 @@ void opera(UserAgent& p, vector<string>& comment) {
 }
 
 
-void dalvik(UserAgent& p, vector<string>& comment) {
-    int slen = comment.size();
-
+void dalvik(UserAgent& p, vector<string>& comment, int slen) {
     if (starts_with(comment[0], "Linux")) {
         p.platform = comment[0];
         if (slen > 2) {
@@ -291,11 +283,9 @@ OSInfo getOSInfo(UserAgent& p) {
 }
 
 
-void detectOS(UserAgent& p, Section& s) {
-    size_t slen = s.comment.size();
-
+void detectOS(UserAgent& p, Section& s, int slen) {
     if (s.name == "Mozilla") {
-        p.platform = getPlatform(s.comment);
+        p.platform = getPlatform(s.comment, slen);
         if (p.platform == "Windows" && slen > 0) {
             p.os = normalizeOS(s.comment[0]);
         }
@@ -303,19 +293,19 @@ void detectOS(UserAgent& p, Section& s) {
         if (p.browser.Engine == "") {
             p.undecided = true;
         } else if(p.browser.Engine == "Gecko") {
-            gecko(p, s.comment);
+            gecko(p, s.comment, slen);
         } else if (p.browser.Engine == "AppleWebKit") {
-            webKit(p, s.comment);
+            webKit(p, s.comment, slen);
         } else if (p.browser.Engine == "Trident") {
-            trident(p, s.comment);
+            trident(p, s.comment, slen);
         }
     } else if (s.name == "Opera") {
         if (slen > 0) {
-            opera(p, s.comment);
+            opera(p, s.comment, slen);
         }
     } else if (s.name == "Dalvik") {
         if (slen > 0) {
-            dalvik(p, s.comment);
+            dalvik(p, s.comment, slen);
         }
     } else {
         p.undecided = true;

@@ -102,7 +102,7 @@ int ua_enricher(struct enrichee *enrichee__) {
     char value[MAX_ORIG_VAL_LEN] = {0,};
 
     strncpy(value, enrichee__->orig_value, enrichee__->orig_value_len);
-    char *output = ua2JsonStr(value);
+    char *output = ua2JsonStr(value, enrichee__->orig_value_len);
 
     if (!output) {
         enrichee__->orig_value_len = 0;

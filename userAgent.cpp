@@ -22,18 +22,16 @@ void getSubStr(char *sub, const string ua, int start, int end) {
 }
 
 
-string readUtil(string& ua, int& index, char delimiter, bool cat) {
+void readUtil(string& ua, int ua_len, char *buf, int& index, char delimiter, bool cat) {
     int catalan = 0;
-    int len = ua.size();
     int i = index;
-    char buf[256] = {0,};
 
-    for (; i < len; i++) {
+    for (; i < ua_len; i++) {
         if (ua[i] == delimiter) {
             if (catalan == 0) {
                 getSubStr(buf, ua, index, i);
                 index = i + 1;
-                return buf;
+                return;
             }
             catalan--;
         } else if (cat && ua[i] == '(') {
@@ -42,11 +40,10 @@ string readUtil(string& ua, int& index, char delimiter, bool cat) {
     }
     getSubStr(buf, ua, index, i);
     index = i + 1;
-    return buf;
 }
 
 
-void parseProduct(Section& s, string product) {
+void parseProduct(Section& s, char *product) {
 
     std::vector<std::string> v;
     split(v, product, is_any_of("/"));
@@ -62,17 +59,20 @@ void parseProduct(Section& s, string product) {
 }
 
 
-Section parseSection(string& ua, int& index) {
-    string buffer = readUtil(ua, index, ' ', false);
+Section parseSection(string& ua, int ua_len, int& index) {
+    char buf[512] = {0,};
+
+    readUtil(ua, ua_len, buf, index, ' ', false);
 
     Section s;
-    parseProduct(s, buffer);
+    parseProduct(s, buf);
 
-    if (index < (int)ua.size() && ua[index] == '(') {
+    if (index < ua_len && ua[index] == '(') {
         index++;
-        buffer = readUtil(ua, index, ')', true);
+        memset(buf, 0, 512);
+        readUtil(ua, ua_len, buf, index, ')', true);
         //split(s.comment, buffer, is_any_of("; "));
-        split_regex(s.comment, buffer, boost::regex("; ")) ;
+        split_regex(s.comment, buf, boost::regex("; ")) ;
         index++;
     }
 
@@ -96,7 +96,7 @@ void initialize(UserAgent& p) {
 }
 
 
-void Parse(UserAgent& p, string ua) {
+void Parse(UserAgent& p, string ua, const int ua_len) {
 
 #ifdef LRU_CACHE
     if (cacheUA.exists(ua) == true) {
@@ -109,26 +109,26 @@ void Parse(UserAgent& p, string ua) {
     p.ua = ua;
 
     int index = 0;
-    int limit = ua.size();
 
-    while (index < limit) {
-        Section s = parseSection(ua, index);
+    while (index < ua_len) {
+        Section s = parseSection(ua, ua_len, index);
         if (!p.mobile && s.name == "Mobile") {
             p.mobile = true;
         }
         sections.push_back(s);
     }
 
-    if (sections.size() > 0) {
+    int slen = sections.size();
+    if (slen > 0) {
         if (sections[0].name == "Mozilla") {
             p.mozilla = sections[0].version;
         }
 
-        detectBrowser(p, sections);
-        detectOS(p, sections[0]);
+        detectBrowser(p, sections, slen);
+        detectOS(p, sections[0], sections[0].comment.size());
 
         if (p.undecided) {
-            checkBot(p, sections);
+            checkBot(p, sections, slen);
         }
 #ifdef LRU_CACHE
         cacheUA.put(ua, p);

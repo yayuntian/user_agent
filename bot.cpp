@@ -73,8 +73,8 @@ void setSimple(UserAgent& p, string name, string version, bool bot) {
 }
 
 
-void fixOther(UserAgent& p, vector<Section>& sections) {
-    if (sections.size() > 0) {
+void fixOther(UserAgent& p, vector<Section>& sections, int slen) {
+    if (slen > 0) {
         p.browser.Name = sections[0].name;
         p.browser.Version = sections[0].version;
         p.mozilla = "";
@@ -82,9 +82,7 @@ void fixOther(UserAgent& p, vector<Section>& sections) {
 }
 
 
-void checkBot(UserAgent& p, vector<Section>& sections) {
-    size_t slen = sections.size();
-
+void checkBot(UserAgent& p, vector<Section>& sections, int slen) {
     if (slen == 1 && sections[0].name != "Mozilla") {
         p.mozilla = "";
         if (boost::regex_search(sections[0].name, botRegexp)) {
@@ -100,7 +98,7 @@ void checkBot(UserAgent& p, vector<Section>& sections) {
 
         setSimple(p, sections[0].name, sections[0].version, false);
     } else {
-        for (size_t i = 0; i < slen; i++) {
+        for (int i = 0; i < slen; i++) {
             string name = getFromSite(sections[i].comment);
             if (name != "") {
                 vector<string> s;
@@ -113,6 +111,6 @@ void checkBot(UserAgent& p, vector<Section>& sections) {
                 return;
             }
         }
-        fixOther(p, sections);
+        fixOther(p, sections, slen);
     }
 }

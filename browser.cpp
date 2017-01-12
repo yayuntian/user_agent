@@ -12,9 +12,8 @@
 
 boost::regex ie11Regexp{"^rv:(.+)$"};
 
-void detectBrowser(UserAgent& p, vector<Section>& sections) {
+void detectBrowser(UserAgent& p, vector<Section>& sections, int slen) {
 
-    int slen = sections.size();
     if (sections[0].name == "Opera") {
         p.browser.Name = "Opera";
         p.browser.Version = sections[0].version;

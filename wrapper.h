@@ -13,7 +13,7 @@ extern "C"
     void ipwrapper_init();
     //char* ipwrapper_query(const char *ip);
     char *ip2JsonStr(const char *ip);
-    char *ua2JsonStr(const char *ua);
+    char *ua2JsonStr(const char *ua, int len);
 
 
 #ifdef __cplusplus

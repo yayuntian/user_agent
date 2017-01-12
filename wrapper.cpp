@@ -105,10 +105,10 @@ char *ip2JsonStr(const char *ip) {
 }
 
 
-char *ua2JsonStr(const char *ua) {
+char *ua2JsonStr(const char *ua, int ua_len) {
 
     UserAgent p;
-    Parse(p, ua);
+    Parse(p, ua, ua_len);
 //    echo_ua(p);
 
     memset(jsonStr, 0, MAX_JSON_STR);
