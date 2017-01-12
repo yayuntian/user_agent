@@ -51,9 +51,13 @@ char *ip2JsonStr(const char *ip) {
         ipaddr = ch;
     } else {    // "58.214.57.66" => 58.214.57.66
         int iplen = strlen(ip);
-        strncpy(ch, ip + 1, iplen);
-        ch[iplen - 2] = '\0';
-        ipaddr = ch;
+        if (ip[0] == '\"') {
+            strncpy(ch, ip + 1, iplen);
+            ch[iplen - 2] = '\0';
+            ipaddr = ch;
+        } else {
+            ipaddr = ip;
+        }
     }
 
     string region = "";
