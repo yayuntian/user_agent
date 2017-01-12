@@ -14,9 +14,10 @@ cache::lru_cache<string, UserAgent> cacheUA(1000);
 #endif
 
 void getSubStr(char *sub, const string ua, int start, int end) {
-    if (end - start > 0) {
+    size_t len = end - start;
+    if (len > 0) {
         const char *p = ua.c_str();
-        strncpy(sub, p + start, end - start);
+        strncpy(sub, p + start, len);
     }
 }
 

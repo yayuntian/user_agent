@@ -548,6 +548,7 @@ void TestUserAgent() {
             exit(1);
         }
     }
+    printf("Test %ld Case OK.\n", uastrings.size());
 }
 
 
@@ -587,7 +588,6 @@ int main(int argc, char **argv) {
                 break;
             case 't':
                 TestUserAgent();
-                printf("Test OK.\n");
                 exit(0);
             case 'c':
                 loop = atoi(optarg);
