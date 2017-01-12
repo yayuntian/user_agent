@@ -66,7 +66,7 @@ void detectBrowser(UserAgent& p, vector<Section>& sections) {
                 for (auto s : sections[0].comment) {
                     boost::smatch what;
                     if (boost::regex_search(s, what, ie11Regexp)) {
-                        p.browser.Version = what[0];
+                        p.browser.Version = what[1];
                         return;
                     }
                 }

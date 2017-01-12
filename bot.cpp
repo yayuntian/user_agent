@@ -14,8 +14,7 @@
 
 
 boost::regex botFromSiteRegexp{"http://.+\\.\\w+"};
-boost::regex botRegexp{"(?i)(bot|crawler|sp(i|y)der|search|worm|fetch|nutch)"};
-
+boost::regex botRegexp{"(?i)(bot|crawler|(s|S)p(i|y)der|search|worm|fetch|nutch)"};
 
 string getFromSite(vector<string>& comment) {
     size_t slen = comment.size();
@@ -88,7 +87,7 @@ void checkBot(UserAgent& p, vector<Section>& sections) {
 
     if (slen == 1 && sections[0].name != "Mozilla") {
         p.mozilla = "";
-        if (boost::regex_match(sections[0].name, botRegexp)) {
+        if (boost::regex_search(sections[0].name, botRegexp)) {
             setSimple(p, sections[0].name, "", true);
             return;
         }

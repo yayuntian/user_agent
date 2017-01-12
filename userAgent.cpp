@@ -133,22 +133,40 @@ void Parse(UserAgent& p, string ua) {
 }
 
 
+void print_val(string key, string val) {
+    if (!val.empty()) {
+        printf("%s: %s\n", key.c_str(), val.c_str());
+    }
+}
+
+void print_val(string key, bool val) {
+    if (val) {
+        printf("%s: %s\n", key.c_str(), "true");
+    } else {
+        printf("%s: %s\n", key.c_str(), "false");
+    }
+}
+
 
 void echo_ua(UserAgent& p) {
 
     cout << p.ua << endl;
+    if (!p.browser.Name.empty()) {
+        printf("browser Name: %s, Version: %s\n",
+               p.browser.Name.c_str(),
+               p.browser.Version.c_str());
+    }
+    if (!p.browser.Engine.empty()) {
+        printf("browser Engine: %s, Version: %s\n",
+               p.browser.Engine.c_str(),
+               p.browser.EngineVersion.c_str());
+    }
 
-    cout << "browser Name: " << p.browser.Name << endl;
-    cout << "browser Version: " << p.browser.Version << endl;
-    cout << "browser Engine: " << p.browser.Engine << endl;
-    cout << "browser EngineVersion: " << p.browser.EngineVersion << endl;
+    print_val("os", p.os);
+    print_val("platform", p.platform);
+    print_val("localization", p.localization);
+    print_val("mozilla", p.mozilla);
 
-    cout << "os: " << p.os << endl;
-    cout << "platfrom: " << p.platform << endl;
-    cout << "local: " << p.localization << endl;
-    cout << "mozilla: " << p.mozilla << endl;
-
-    cout << "is bot: " << p.bot << endl;
-    cout << "is mobile: " << p.mobile << endl;
-    cout << "is undecided: " << p.undecided << endl;
+    print_val("bot", p.bot);
+    print_val("mobile", p.mobile);
 }

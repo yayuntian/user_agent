@@ -133,13 +133,13 @@ void gecko(UserAgent& p, vector<string>& comment) {
             p.os = normalizeOS(comment[1]);
         }
     } else {
-        if (p.platform == "Andriod") {
+        if (p.platform == "Android") {
             p.mobile = true;
-            p.platform = normalizeOS(comment[1]);
             p.os = p.platform;
+            p.platform = normalizeOS(comment[1]);
         } else if (comment[0] == "Mobile" || comment[0] == "Tablet") {
             p.mobile = true;
-            p.os = "FireFoxOS";
+            p.os = "FirefoxOS";
         } else {
             if (p.os == "") {
                 p.os = normalizeOS(comment[1]);
@@ -192,7 +192,7 @@ void opera(UserAgent& p, vector<string>& comment) {
         }
         p.platform = comment[0];
         if (slen > 1) {
-            p.os = comment[0];
+            p.os = comment[1];
             if (slen > 3) {
                 p.localization = comment[3];
             }
