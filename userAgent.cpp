@@ -9,8 +9,9 @@
 #include "lrucache.h"
 #include "userAgent.h"
 
-
+#ifdef LRU_CACHE
 cache::lru_cache<string, UserAgent> cacheUA(1000);
+#endif
 
 void getSubStr(char *sub, const string ua, int start, int end) {
     if (end - start > 0) {
@@ -96,11 +97,12 @@ void initialize(UserAgent& p) {
 
 void Parse(UserAgent& p, string ua) {
 
+#ifdef LRU_CACHE
     if (cacheUA.exists(ua) == true) {
         p = cacheUA.get(ua);
         return;
     }
-
+#endif
     vector<Section> sections;
     initialize(p);
     p.ua = ua;
@@ -127,8 +129,9 @@ void Parse(UserAgent& p, string ua) {
         if (p.undecided) {
             checkBot(p, sections);
         }
-
+#ifdef LRU_CACHE
         cacheUA.put(ua, p);
+#endif
     }
 }
 
