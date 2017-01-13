@@ -22,4 +22,4 @@ int main(int argc, char **argv) {
 }
 ~~~
 
-Copyright &copy; 2012-2017 Miquel Sabaté Solà, released under the MIT License.
+Copyright &copy; 2016-2017 yayun.tian@163.com
