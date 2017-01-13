@@ -22,4 +22,4 @@ int main(int argc, char **argv) {
 }
 ~~~
 
-Copyright &copy; 2016-2017 yayun.tian@163.com
+Copyright &copy; 2016-2017 yayuntian@163.com
