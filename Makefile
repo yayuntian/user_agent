@@ -1,4 +1,4 @@
-FLAGS = -Wall -g -O0 -Werror
+FLAGS = -Wall -g -O3 -Werror
 FLAGS += -DPERF
 FLAGS += -DLRU_CACHE
 CXXFLAGS += -std=c++0x $(FLAGS)
@@ -12,17 +12,15 @@ OBJS = main.o kafkaConsumer.o userAgent.o \
 	        browser.o extractor.o enricher.o \
 	        ipLocator.o wrapper.o
 
-TARGET = mafia
-
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $<
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
 
-all: $(TARGET)
+all: mafia json_test ua_test ip_test
 
-$(TARGET): $(OBJS)
+mafia: $(OBJS)
 	$(CXX) -o $@ $(OBJS) $(CXXLIBS) $(KAFKA_LIBS)
 
 # unit test
@@ -51,4 +49,4 @@ ip_test: $(IP_OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.o $(TARGET) json ua_test ip_test
+	rm -f *.o mafia json_test ua_test ip_test
