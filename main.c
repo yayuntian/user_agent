@@ -101,8 +101,9 @@ int ip_enricher(struct enrichee *enrichee__) {
 int ua_enricher(struct enrichee *enrichee__) {
     char value[MAX_ORIG_VAL_LEN] = {0,};
 
-    strncpy(value, enrichee__->orig_value, enrichee__->orig_value_len);
-    char *output = ua2JsonStr(value, enrichee__->orig_value_len);
+    // remove "
+    strncpy(value, enrichee__->orig_value + 1, enrichee__->orig_value_len - 2);
+    char *output = ua2JsonStr(value, enrichee__->orig_value_len - 2);
 
     if (!output) {
         enrichee__->orig_value_len = 0;
@@ -389,14 +390,14 @@ int main(int argc, char **argv) {
     ipwrapper_init();
 
     if (kconf.skip < 1) {
-        register_enricher("src_ip", ip_enricher);
-        register_enricher("dst_ip", ip_enricher);
+//        register_enricher("src_ip", ip_enricher);
+//        register_enricher("dst_ip", ip_enricher);
         register_enricher("user_agent", ua_enricher);
     }
 
     if (kconf.filename != NULL) {
         read_file();
-        return 0;
+        exit(0);
     }
 
     init_kafka_consumer();

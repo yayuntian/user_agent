@@ -140,7 +140,7 @@ char *ua2JsonStr(const char *ua, int ua_len) {
         strcat(jsonStr, "false");
     }
 
-    strcat(jsonStr, ",\"browser\":");
+    strcat(jsonStr, ",\"browser\":\"");
     strcat(jsonStr, p.browser.Name.c_str());
 
     strcat(jsonStr, "\",\"browser_version\":\"");
@@ -158,10 +158,10 @@ char *ua2JsonStr(const char *ua, int ua_len) {
     strcat(jsonStr, "\",\"platform\":\"");
     strcat(jsonStr, p.platform.c_str());
 
-    strcat(jsonStr, "\",\"raw\":");
+    strcat(jsonStr, "\",\"raw\":\"");
     strcat(jsonStr, ua);
 
-    strcat(jsonStr, "}");
+    strcat(jsonStr, "\"}");
 
     return jsonStr;
 }

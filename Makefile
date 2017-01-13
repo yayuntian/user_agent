@@ -24,21 +24,19 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) -o $@ $(OBJS) $(CXXLIBS) $(KAFKA_LIBS)
 
-JSON_OBJS = main.o extractor.o ipLocator.o wrapper.o \
-    userAgent.o operatingSystem.o bot.o browser.o
-json: $(JSON_OBJS)
-	$(CXX) -o $@ $(JSON_OBJS) $(CXXLIBS) $(KAFKA_LIBS)
+# unit test
 
-UA_OBJS = test_ua.o userAgent.o operatingSystem.o bot.o browser.o
-ua: $(UA_OBJS)
+UA_OBJS = test_ua.o ipLocator.o wrapper.o \
+                    userAgent.o operatingSystem.o bot.o browser.o
+ua_test: $(UA_OBJS)
 	$(CXX) -o $@ $(UA_OBJS) $(CXXLIBS)
 
 IP_OBJS = test_ip.o ipLocator.o wrapper.o \
-userAgent.o operatingSystem.o bot.o browser.o
-ip: $(IP_OBJS)
+                    userAgent.o operatingSystem.o bot.o browser.o
+ip_test: $(IP_OBJS)
 	$(CXX) -o $@ $(IP_OBJS) $(CXXLIBS)
 
 
 .PHONY: clean
 clean:
-	rm -f *.o $(TARGET) json ua ip
+	rm -f *.o $(TARGET) json ua_test ip_test

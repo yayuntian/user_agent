@@ -4,6 +4,7 @@
 #include <getopt.h>
 
 #include "userAgent.h"
+#include "wrapper.h"
 
 
 struct UATest {
@@ -558,12 +559,13 @@ void BenchmarkUserAgent(string str, int loop) {
     printf("loop cout: %u\n", loop);
     int i;
     struct timeval start, end;
-    UserAgent ua;
+//    UserAgent ua;
 
     gettimeofday(&start, NULL);
     for (i = 0; i < loop; i++) {
-        Parse(ua, str, str.size());
-        if (i == 0) echo_ua(ua);
+//        Parse(ua, str, str.size());
+        char *js = ua2JsonStr(str.c_str(), str.size());
+        if (i == 0) printf("%s\n", js);
     }
     gettimeofday(&end, NULL);
 
@@ -580,8 +582,9 @@ int main(int argc, char **argv) {
     string str = "Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.1)";
     int perf = 0;
     int loop = 100000;
+    int json = 0;
 
-    while ((opt = getopt(argc, argv, "ptc:h")) != -1) {
+    while ((opt = getopt(argc, argv, "ptjc:h")) != -1) {
         switch (opt) {
             case 'p':
                 perf = 1;
@@ -592,12 +595,19 @@ int main(int argc, char **argv) {
             case 'c':
                 loop = atoi(optarg);
                 break;
+            case 'j':
+                json = 1;
+                break;
             case 'h':
             default:
                 goto usage;
         }
     }
 
+    if (json == 1) {
+        perf = 1;
+        loop = 1;
+    }
 
     if (perf == 1) {
         if (argc - optind > 0) {
