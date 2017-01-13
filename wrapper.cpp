@@ -41,30 +41,31 @@ static char jsonStr[MAX_JSON_STR];
 #define MAX_IP_STR 256
 static char ipStr[MAX_IP_STR];
 
-
-void ipStrSplit(const char *ipaddr, IPInfo &ipInfo) {
+void ipStrSplit(const char *query, int len, IPInfo &ipInfo) {
     char *p[16];
+    char *token, *next;
     int in = 0;
     char *buf = ipStr;
-    memcpy(buf, ipaddr, strlen(ipaddr));
+    memcpy(buf, query, len);
+    buf[len] = '|';
 
-    char *out_ptr = NULL;
-    while ((p[in] = strtok_r(buf, "|", &out_ptr)) != NULL) {
-        in++;
-        buf = NULL;
+    while((token = strchr(buf, '|')))  {
+        next = token + 1;
+        *token = '\0';
+        p[in++] = buf;
+        buf = next;
     }
 
-    ipInfo.city = p[3];
-    ipInfo.isp = p[5];
-    ipInfo.longitude = p[9];
-    ipInfo.latitude = p[10];
-    return;
+    if (in > 10 && strncmp(p[5], "qqzeng-ip", strlen("qqzeng-ip") != 0)) {
+        ipInfo.city = p[3];
+        ipInfo.isp = p[5];
+        ipInfo.longitude = p[9];
+        ipInfo.latitude = p[10];
+    }
 }
 
 
 char *ip2JsonStr(const char *ip) {
-
-    string partten = "|";
     char ch[32] = {0,};
     const char *ipaddr = NULL;
     const char *raw = ip;
@@ -84,8 +85,12 @@ char *ip2JsonStr(const char *ip) {
         }
     }
 
+    const char *query = finder->Query(ipaddr).c_str();
     IPInfo ipInfo;
-    ipStrSplit(ipaddr, ipInfo);
+    int qlen = strlen(query);
+    if (qlen > 0) {
+        ipStrSplit(query, qlen, ipInfo);
+    }
 
     memset(jsonStr, 0, MAX_JSON_STR);
 
