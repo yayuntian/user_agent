@@ -8,16 +8,6 @@
 static struct interested_pair interested_pairs[MAX_INTERESTED_PAIRS];
 static int num_interested_pairs = 0;
 
-struct enrichee enrichees[MAX_ENRICHEE];
-
-int init() {
-    for (int i = 0; i < MAX_ENRICHEE; i++) {
-        enrichees[i].enriched_value = (char *) malloc(MAX_ENRICHED_VALUE_LEN);
-    }
-
-    return 0;
-}
-
 
 int register_enricher(const char *interested_name, enricher enricher__) {
     int name_len = strlen(interested_name);
@@ -31,8 +21,9 @@ int register_enricher(const char *interested_name, enricher enricher__) {
     return 0;
 }
 
+
 // 当找到感兴趣的字符后返回，或者整个字符串都查找完没有发现感兴趣的字符
-int find_delimiter_sse42(const char *str2scan, const char *delimiters,
+static int find_delimiter_sse42(const char *str2scan, const char *delimiters,
         size_t set_size, int *found) {
     *found = 0;
 
@@ -47,7 +38,7 @@ int find_delimiter_sse42(const char *str2scan, const char *delimiters,
     return r;
 }
 
-int is_pair_interested(const char *string_start, int string_len,
+static int is_pair_interested(const char *string_start, int string_len,
         struct interested_pair **interested) {
     int is_interested = 0;
 

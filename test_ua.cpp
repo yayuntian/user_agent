@@ -598,7 +598,9 @@ void BenchmarkUserAgent(string str, int loop) {
 
 int main(int argc, char **argv) {
     int opt;
-    string str = "Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.1)";
+    string str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) "
+            "AppleWebKit/537.36 (KHTML, like Gecko)"
+            " Chrome/43.0.2357.130 Safari/537.36 JianKongBao Monitor 1.1";
     int perf = 0;
     int loop = 100000;
     int json = 0;

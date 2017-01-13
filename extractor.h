@@ -39,9 +39,13 @@ struct interested_pair {
 
 extern struct enrichee enrichees[MAX_ENRICHEE];
 
+int extract(const char *buf, const char *buf_end);
+int register_enricher(const char *interested_name, enricher enricher__);
+
 
 int init();
-int register_enricher(const char *interested_name, enricher enricher__);
-int extract(const char *buf, const char *buf_end);
+int ip_enricher(struct enrichee *enrichee__);
+int ua_enricher(struct enrichee *enrichee__);
+void combine_enrichee(const char *buf, char *result);
 
 #endif // MAFIA_EXTRACTOR_H
