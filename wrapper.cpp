@@ -36,7 +36,31 @@ static inline void iptostr(char ipstr[], uint16_t len, uint32_t ip) {
 }
 
 #define MAX_JSON_STR 2048
-char jsonStr[MAX_JSON_STR];
+static char jsonStr[MAX_JSON_STR];
+
+#define MAX_IP_STR 256
+static char ipStr[MAX_IP_STR];
+
+
+void ipStrSplit(const char *ipaddr, IPInfo &ipInfo) {
+    char *p[16];
+    int in = 0;
+    char *buf = ipStr;
+    memcpy(buf, ipaddr, strlen(ipaddr));
+
+    char *out_ptr = NULL;
+    while ((p[in] = strtok_r(buf, "|", &out_ptr)) != NULL) {
+        in++;
+        buf = NULL;
+    }
+
+    ipInfo.city = p[3];
+    ipInfo.isp = p[5];
+    ipInfo.longitude = p[9];
+    ipInfo.latitude = p[10];
+    return;
+}
+
 
 char *ip2JsonStr(const char *ip) {
 
@@ -60,21 +84,8 @@ char *ip2JsonStr(const char *ip) {
         }
     }
 
-    string region = "";
-    string isp = "";
-    string longtitude = "";
-    string latitude = "";
-
-    vector<string> v;
-    const char *query = finder->Query(ipaddr).c_str();
-    split(v, query, is_any_of(partten));
-
-    if (v.size() > 10 && v[5] != "qqzeng-ip") {
-        region = v[3];
-        isp = v[5];
-        longtitude = v[9];
-        latitude = v[10];
-    }
+    IPInfo ipInfo;
+    ipStrSplit(ipaddr, ipInfo);
 
     memset(jsonStr, 0, MAX_JSON_STR);
 
@@ -93,16 +104,16 @@ char *ip2JsonStr(const char *ip) {
     strcat(jsonStr, ipaddr);
 
     strcat(jsonStr, "\",\"region\":\"");
-    strcat(jsonStr, region.c_str());
+    strcat(jsonStr, ipInfo.city.c_str());
 
     strcat(jsonStr, "\",\"isp\":\"");
-    strcat(jsonStr, isp.c_str());
+    strcat(jsonStr, ipInfo.isp.c_str());
 
     strcat(jsonStr, "\",\"longtitude\":\"");
-    strcat(jsonStr, longtitude.c_str());
+    strcat(jsonStr, ipInfo.longitude.c_str());
 
     strcat(jsonStr, "\",\"latitude\":\"");
-    strcat(jsonStr, latitude.c_str());
+    strcat(jsonStr, ipInfo.latitude.c_str());
     strcat(jsonStr, "\"}");
 
     return jsonStr;
