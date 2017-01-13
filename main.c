@@ -390,8 +390,8 @@ int main(int argc, char **argv) {
     ipwrapper_init();
 
     if (kconf.skip < 1) {
-//        register_enricher("src_ip", ip_enricher);
-//        register_enricher("dst_ip", ip_enricher);
+        register_enricher("src_ip", ip_enricher);
+        register_enricher("dst_ip", ip_enricher);
         register_enricher("user_agent", ua_enricher);
     }
 

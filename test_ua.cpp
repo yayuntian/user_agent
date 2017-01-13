@@ -554,7 +554,7 @@ void TestUserAgent() {
 
 
 
-void BenchmarkUserAgent(string str, int loop) {
+void BenchmarkUserAgentJson(string str, int loop) {
 
     printf("loop cout: %u\n", loop);
     int i;
@@ -566,6 +566,25 @@ void BenchmarkUserAgent(string str, int loop) {
 //        Parse(ua, str, str.size());
         char *js = ua2JsonStr(str.c_str(), str.size());
         if (i == 0) printf("%s\n", js);
+    }
+    gettimeofday(&end, NULL);
+
+    long time_cost = ((end.tv_sec - start.tv_sec) * 1000000 + \
+            end.tv_usec - start.tv_usec);
+    printf("cost time: %ld us, %.2f pps\n", time_cost, loop / (time_cost * 1.0) * 1000000);
+}
+
+void BenchmarkUserAgent(string str, int loop) {
+
+    printf("loop cout: %u\n", loop);
+    int i;
+    struct timeval start, end;
+    UserAgent ua;
+
+    gettimeofday(&start, NULL);
+    for (i = 0; i < loop; i++) {
+        Parse(ua, str, str.size());
+        if (i == 0) echo_ua(ua);
     }
     gettimeofday(&end, NULL);
 
@@ -604,7 +623,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (json == 1) {
+    if (perf == 0 && json == 1) {
         perf = 1;
         loop = 1;
     }
@@ -613,7 +632,12 @@ int main(int argc, char **argv) {
         if (argc - optind > 0) {
             str = argv[optind];
         }
-        BenchmarkUserAgent(str, loop);
+        if (json == 1) {
+            BenchmarkUserAgentJson(str, loop);
+        } else {
+            BenchmarkUserAgent(str, loop);
+        }
+
         exit(0);
     }
 
