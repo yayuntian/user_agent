@@ -9,10 +9,13 @@
 #include "ipLocator.h"
 #include "userAgent.h"
 #include "wrapper.h"
+#include "lrucache.h"
 
 
 IPSearch *finder;
-
+#ifdef LRU_CACHE
+cache::lru_cache<uint32_t, string> cacheIP(100000);
+#endif
 void ipwrapper_init() {
     finder = IPSearch::instance();
     if (!finder) {
@@ -85,6 +88,15 @@ char *ip2JsonStr(const char *ip) {
         }
     }
 
+    int intIP = strtoip(ipaddr);
+#ifdef LRU_CACHE
+    if (cacheIP.exists(intIP) == true) {
+        string cache = cacheIP.get(intIP);
+        memset(jsonStr, 0, MAX_JSON_STR);
+        strncpy(jsonStr, cache.c_str(), cache.size());
+        return jsonStr;
+    }
+#endif
     const char *query = finder->Query(ipaddr).c_str();
     IPInfo ipInfo;
     int qlen = strlen(query);
@@ -95,8 +107,7 @@ char *ip2JsonStr(const char *ip) {
     memset(jsonStr, 0, MAX_JSON_STR);
 
     char dec[32] = {0,};
-    uint32_t i = strtoip(ipaddr);
-    sprintf(dec, "%u", i);
+    sprintf(dec, "%u", intIP);
 
     strcat(jsonStr, "{\"decimal\":");
     strcat(jsonStr, dec);
@@ -120,7 +131,9 @@ char *ip2JsonStr(const char *ip) {
     strcat(jsonStr, "\",\"latitude\":\"");
     strcat(jsonStr, ipInfo.latitude.c_str());
     strcat(jsonStr, "\"}");
-
+#ifdef LRU_CACHE
+    cacheIP.put(intIP, jsonStr);
+#endif
     return jsonStr;
 }
 
