@@ -117,11 +117,6 @@ int main(int argc, char **argv) {
         exit(0);
     }
 
-    if (argc - optind > 0) {
-        BenchmarkJson(argv[optind], 1, 1);
-        exit(0);
-    }
-
 usage:
     printf("Usage: %s <option> [user_agent]\n", argv[0]);
     printf("General options:\n"
