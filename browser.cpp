@@ -43,6 +43,15 @@ void detectBrowser(UserAgent& p, vector<Section>& sections, int slen) {
                 } else if (name == "OPR") {
                     p.browser.Name = "Opera";
                     p.browser.Version = sections[slen - 1].version;
+                } else if (name == "QQBrowser") {
+                    p.browser.Name = name;
+                    p.browser.Version = sections[slen - 1].version;
+                } else if (name == "360SE") {
+                    p.browser.Name = name;
+//                    p.browser.Version = sections[slen - 1].version;
+                } else if (name == "LBBROWSER") {
+                    p.browser.Name = name;
+//                    p.browser.Version = sections[slen - 1].version;
                 } else {
                     if (sections[sectionIndex].name == "Chrome") {
                         p.browser.Name = "Chrome";
@@ -77,6 +86,10 @@ void detectBrowser(UserAgent& p, vector<Section>& sections, int slen) {
         if (comment[0] == "compatible" && starts_with(comment[1], "MSIE")) {
             p.browser.Name = "Internet Explorer";
             p.browser.Engine = "Trident";
+
+            if (starts_with(comment[comment.size() - 1], "360SE")) {
+                p.browser.Name = "360SE";
+            }
 
             size_t len = comment.size();
             for (size_t i = 0; i < len; i++) {

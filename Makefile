@@ -1,4 +1,4 @@
-FLAGS = -Wall -g -O3 -Werror
+FLAGS = -Wall -g -O0 -Werror
 #FLAGS += -DLRU_CACHE
 CXXFLAGS += -std=c++0x $(FLAGS)
 CFLAGS += -std=c99 -msse4.2 $(FLAGS)
